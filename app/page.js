@@ -128,9 +128,9 @@ export default function MainScreen() {
               type="button"
               onClick={onBegin}
               className="w-full transition-transform hover:scale-[1.02] active:scale-[0.98]"
-              aria-label="Let's begin"
+              aria-label="Let&apos;s begin"
             >
-              <span className="sr-only">Let's begin</span>
+              <span className="sr-only">Let&apos;s begin</span>
               <img src={IMG.button} alt="" className="w-full h-auto" draggable="false" />
             </button>
           </div>
