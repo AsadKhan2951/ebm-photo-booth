@@ -9,9 +9,9 @@ const IMG = {
   header: "/assets/Your%20Creation/Header.png",
   title: "/assets/Your%20Creation/Share-Your-Creation!.png",
   character: "/assets/Your%20Creation/Character.png",
-  print: "/assets/Your%20Creation/Print.png",
-  email: "/assets/Your%20Creation/Email.png",
-  both: "/assets/Your%20Creation/Do-Both.png"
+  print: "/assets/Your%20Creation/Print-New.png",
+  email: "/assets/Your%20Creation/Email-New.png",
+  both: "/assets/Your%20Creation/Do-Both-New.png"
 };
 
 export default function YourCreationScreen() {
@@ -42,18 +42,18 @@ export default function YourCreationScreen() {
         <img
           src={IMG.title}
           alt="Share Your Creation!"
-          className="absolute left-1/2 top-[24%] w-[82%] -translate-x-1/2"
+          className="absolute left-1/2 top-[24%] w-[90%] -translate-x-1/2"
           draggable="false"
         />
 
         <img
           src={IMG.character}
           alt="Character"
-          className="absolute left-1/2 top-[33%] w-[76%] -translate-x-1/2"
+          className="absolute left-1/2 top-[30%] w-[80%] -translate-x-1/2"
           draggable="false"
         />
 
-        <div className="absolute left-1/2 bottom-[16%] w-[90%] -translate-x-1/2 flex items-center justify-between gap-4">
+        <div className="absolute left-1/2 bottom-[14%] w-[90%] -translate-x-1/2 flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={goDone}
@@ -72,7 +72,7 @@ export default function YourCreationScreen() {
           </button>
         </div>
 
-        <div className="absolute left-1/2 bottom-[6%] w-[52%] -translate-x-1/2">
+        <div className="absolute left-1/2 bottom-[0%] w-[50%] -translate-x-1/2">
           <button
             type="button"
             onClick={goDone}

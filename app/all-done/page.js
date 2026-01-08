@@ -44,14 +44,14 @@ export default function AllDoneScreen() {
         <img
           src={IMG.subtitle}
           alt="Your photo is ready!"
-          className="absolute left-1/2 top-[29%] w-[58%] -translate-x-1/2"
+          className="absolute left-1/2 top-[32%] w-[58%] -translate-x-1/2"
           draggable="false"
         />
 
         <img
           src={IMG.character}
           alt="Character"
-          className="absolute left-1/2 top-[36%] w-[76%] -translate-x-1/2"
+          className="absolute left-1/2 top-[36%] w-[85%] -translate-x-1/2"
           draggable="false"
         />
       </div>

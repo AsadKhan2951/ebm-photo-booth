@@ -46,7 +46,7 @@ export default function YourCharacterScreen() {
         <img
           src={IMG.character}
           alt="Character"
-          className="absolute left-1/2 top-[35%] w-[76%] -translate-x-1/2"
+          className="absolute left-1/2 top-[35%] w-[80%] -translate-x-1/2"
           draggable="false"
         />
 
