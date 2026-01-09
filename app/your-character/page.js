@@ -62,7 +62,7 @@ export default function YourCharacterScreen() {
           <button
             type="button"
             onClick={() => router.push("/your-creation")}
-            className="w-[47%] transition-transform active:scale-[0.98] hover:scale-[1.03]"
+            className="w-[43%] transition-transform active:scale-[0.98] hover:scale-[1.03]"
             aria-label="This is perfect"
           >
             <img src={IMG.perfect} alt="This is perfect" className="w-full h-auto" draggable="false" />

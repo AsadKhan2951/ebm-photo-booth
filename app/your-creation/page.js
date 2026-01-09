@@ -72,7 +72,7 @@ export default function YourCreationScreen() {
           </button>
         </div>
 
-        <div className="absolute left-1/2 bottom-[0%] w-[50%] -translate-x-1/2">
+        <div className="absolute left-1/2 bottom-[2%] w-[43%] -translate-x-1/2">
           <button
             type="button"
             onClick={goDone}

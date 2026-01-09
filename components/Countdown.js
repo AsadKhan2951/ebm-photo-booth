@@ -26,6 +26,8 @@ const ASSET = {
 export default function Countdown({ seconds = 3, onDone, freezeAt = null }) {
   const [n, setN] = useState(seconds);
 
+  const stepMs = 1300;
+
   useEffect(() => {
     if (freezeAt != null) {
       setN(freezeAt);
@@ -35,9 +37,9 @@ export default function Countdown({ seconds = 3, onDone, freezeAt = null }) {
     setN(seconds);
     const t = setInterval(() => {
       setN((v) => v - 1);
-    }, 1000);
+    }, stepMs);
     return () => clearInterval(t);
-  }, [seconds, freezeAt]);
+  }, [seconds, freezeAt, stepMs]);
 
   useEffect(() => {
     if (freezeAt != null) return;

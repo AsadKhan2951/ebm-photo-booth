@@ -55,20 +55,10 @@ export default function StartScreen() {
 
         <div className="absolute inset-0">
           <div className="absolute left-1/2 top-[-3%] -translate-x-1/2 w-[70%]">
-            <img src={IMG.logo} alt="Little Pipers" className="w-full h-auto ms-float" draggable="false" />
+            <img src={IMG.logo} alt="Little Pipers" className="w-full h-auto" draggable="false" />
           </div>
 
           <div className="absolute left-[-6%] top-[22%] w-[60%] h-[18%] pointer-events-none z-10">
-            <svg className="absolute inset-0" viewBox="0 0 100 60" fill="none" aria-hidden="true">
-              <path
-                d="M0 45 C 20 10, 55 0, 92 20"
-                stroke="white"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeDasharray="10 10"
-                className="ms-dash"
-              />
-            </svg>
             <img
               src={IMG.arrowRight}
               alt=""
@@ -92,16 +82,6 @@ export default function StartScreen() {
           />
 
           <div className="absolute right-[-6%] bottom-[-1%] w-[60%] h-[20%] pointer-events-none z-10">
-            <svg className="absolute inset-0" viewBox="0 0 100 60" fill="none" aria-hidden="true">
-              <path
-                d="M100 8 C 70 18, 40 48, 2 55"
-                stroke="white"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeDasharray="10 10"
-                className="ms-dash"
-              />
-            </svg>
             <img
               src={IMG.arrowLeft}
               alt=""

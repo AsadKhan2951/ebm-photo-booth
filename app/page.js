@@ -41,7 +41,7 @@ export default function MainScreen() {
             <img
               src={IMG.logo}
               alt="Little Pipers"
-              className="w-full h-auto ms-float"
+              className="w-full h-auto"
               draggable="false"
             />
           </div>
@@ -53,11 +53,11 @@ export default function MainScreen() {
             aria-hidden="true"
           >
             <path
-              className="ms-dash"
               d="M2 30 C 18 5, 40 2, 60 16 S 90 46, 98 10"
               stroke="white"
               strokeWidth="2.5"
               strokeLinecap="round"
+              strokeDasharray="10 12"
             />
           </svg>
 

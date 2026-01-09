@@ -62,6 +62,15 @@
   .ms-arrow-left { animation: ms-arrow-left 1.4s ease-out 1 both; }
   .ms-arrow-right { animation: ms-arrow-right 1.4s ease-out 1 both; animation-delay: 0.15s; }
 
+  @keyframes page-fade {
+    0% { opacity: 0; transform: translateY(10px) scale(0.995); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .page-transition {
+    animation: page-fade 360ms ease-out;
+  }
+
   @keyframes confetti-fall {
     0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
     10% { opacity: 1; }
