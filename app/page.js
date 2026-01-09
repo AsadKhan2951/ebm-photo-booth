@@ -37,7 +37,7 @@ export default function MainScreen() {
         />
 
         <div className="absolute inset-0">
-          <div className="absolute left-1/2 top-[-2%] -translate-x-1/2 w-[72%]">
+          <div className="absolute left-1/2 top-[-3%] -translate-x-1/2 w-[65%]">
             <img
               src={IMG.logo}
               alt="Little Pipers"

@@ -54,7 +54,7 @@ export default function StartScreen() {
         />
 
         <div className="absolute inset-0">
-          <div className="absolute left-1/2 top-[-3%] -translate-x-1/2 w-[70%]">
+          <div className="absolute left-1/2 top-[-3%] -translate-x-1/2 w-[65%]">
             <img src={IMG.logo} alt="Little Pipers" className="w-full h-auto" draggable="false" />
           </div>
 
