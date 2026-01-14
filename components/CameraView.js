@@ -23,6 +23,7 @@ export default function CameraView({
   const [capturing, setCapturing] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState("");
   const startedRef = useRef(false);
+  const [retryTick, setRetryTick] = useState(0);
 
   const stopStream = () => {
     if (streamRef.current) {
@@ -73,23 +74,41 @@ export default function CameraView({
       setCapturing(false);
       startedRef.current = false;
       stopStream();
+      await sleep(150);
 
-      const videoConstraints = {
+      const baseConstraints = {
         width: { ideal: 1280 },
         height: { ideal: 720 }
       };
 
-      if (selectedDeviceId) {
-        videoConstraints.deviceId = { exact: selectedDeviceId };
-      } else {
-        videoConstraints.facingMode = "user";
-      }
+      const buildConstraints = (useDeviceId) => {
+        const videoConstraints = { ...baseConstraints };
+        if (useDeviceId && selectedDeviceId) {
+          videoConstraints.deviceId = { exact: selectedDeviceId };
+        } else {
+          videoConstraints.facingMode = "user";
+        }
+        return videoConstraints;
+      };
 
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: videoConstraints,
+      const getStream = async (useDeviceId) => {
+        return navigator.mediaDevices.getUserMedia({
+          video: buildConstraints(useDeviceId),
           audio: false
         });
+      };
+
+      try {
+        let stream;
+        try {
+          stream = await getStream(true);
+        } catch (err) {
+          const name = err?.name || "";
+          const shouldFallback = selectedDeviceId && name !== "NotAllowedError";
+          if (!shouldFallback) throw err;
+          stream = await getStream(false);
+          setSelectedDeviceId("");
+        }
 
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
@@ -105,10 +124,14 @@ export default function CameraView({
         refreshDevices();
       } catch (e) {
         console.error(e);
-        const baseMsg = selectedDeviceId
-          ? "Selected camera available nahi hai. Insta360 connect karein ya list se dusra camera choose karein."
-          : "Camera permission denied ya webcam detect nahi hui. Chrome me site camera allow karo.";
-        setError(baseMsg);
+        const name = e?.name || "";
+        if (name === "NotAllowedError") {
+          setError("Camera permission denied. Chrome me site camera allow karo.");
+        } else if (selectedDeviceId) {
+          setError("Selected camera available nahi hai. Insta360 connect karein ya list se dusra camera choose karein.");
+        } else {
+          setError("Camera access nahi ho raha. WebCam busy hai to close karke retry karo.");
+        }
       }
     }
 
@@ -118,7 +141,7 @@ export default function CameraView({
       cancelled = true;
       stopStream();
     };
-  }, [selectedDeviceId, refreshDevices]);
+  }, [selectedDeviceId, refreshDevices, retryTick]);
 
   useEffect(() => {
     if (ready && !error && !counting && !capturing && !startedRef.current) {
@@ -197,6 +220,13 @@ export default function CameraView({
             <div className="mt-3 text-xs text-slate-500">
               Tip: Chrome -&gt; Site settings -&gt; Camera -&gt; Allow.
             </div>
+            <button
+              type="button"
+              onClick={() => setRetryTick((t) => t + 1)}
+              className="mt-4 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
+            >
+              Retry
+            </button>
           </div>
         </div>
       ) : null}

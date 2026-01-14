@@ -11,7 +11,8 @@ const emptyState = {
   character: null, // {id,name}
   shots: [], // dataURLs
   selectedIndex: null,
-  enhanced: null // dataURL (mock)
+  enhanced: null, // dataURL (mock)
+  composite: null // dataURL (face + character)
 };
 
 export function BoothProvider({ children }) {
@@ -36,9 +37,10 @@ export function BoothProvider({ children }) {
     state,
     setUser: (user) => setState((s) => ({ ...s, user: { ...s.user, ...user } })),
     setCharacter: (character) => setState((s) => ({ ...s, character })),
-    setShots: (shots) => setState((s) => ({ ...s, shots, selectedIndex: null, enhanced: null })),
+    setShots: (shots) => setState((s) => ({ ...s, shots, selectedIndex: null, enhanced: null, composite: null })),
     selectShot: (index) => setState((s) => ({ ...s, selectedIndex: index, enhanced: null })),
     setEnhanced: (enhanced) => setState((s) => ({ ...s, enhanced })),
+    setComposite: (composite) => setState((s) => ({ ...s, composite })),
     resetAll: () => setState(emptyState)
   }), [state]);
 

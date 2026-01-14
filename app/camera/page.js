@@ -11,7 +11,8 @@ export default function Screen3() {
   return (
     <div className="min-h-screen w-full bg-[#2a0b4f] flex items-center justify-center px-4 py-6 kids-font">
       <CameraView
-        burstCount={5}
+        burstCount={1}
+        burstIntervalMs={250}
         onCaptured={(shots) => {
           setShots(shots);
           router.push("/your-character");

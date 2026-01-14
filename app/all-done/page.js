@@ -126,7 +126,7 @@ export default function AllDoneScreen() {
   const { state } = useBooth();
 
   useEffect(() => {
-    if (!state.shots?.length) router.replace("/camera");
+    if (!state.shots?.length) router.replace("/capture");
   }, [state.shots, router]);
 
   return (
@@ -160,7 +160,7 @@ export default function AllDoneScreen() {
         />
 
         <img
-          src={IMG.character}
+          src={state.composite || IMG.character}
           alt="Character"
           className="absolute left-[54%] top-[36%] w-[85%] -translate-x-1/2"
           draggable="false"
