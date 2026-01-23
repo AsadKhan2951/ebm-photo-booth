@@ -124,6 +124,14 @@ function ConfettiBurst() {
 export default function AllDoneScreen() {
   const router = useRouter();
   const { state } = useBooth();
+  const characterId = state.character?.id || "migu";
+  const characterLayout = {
+    migu: { top: 36, width: 85, left: 54 },
+    teddy: { top: 36, width: 70, left: 50 },
+    pipper: { top: 36, width: 45, left: 50 },
+    default: { top: 36, width: 85, left: 54 }
+  };
+  const layout = characterLayout[characterId] || characterLayout.default;
 
   useEffect(() => {
     if (!state.shots?.length) router.replace("/capture");
@@ -162,7 +170,8 @@ export default function AllDoneScreen() {
         <img
           src={state.composite || IMG.character}
           alt="Character"
-          className="absolute left-[54%] top-[36%] w-[85%] -translate-x-1/2"
+          className="absolute -translate-x-1/2"
+          style={{ left: `${layout.left}%`, top: `${layout.top}%`, width: `${layout.width}%` }}
           draggable="false"
         />
       </div>

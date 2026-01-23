@@ -12,7 +12,7 @@ const BANUBA_EFFECT_URL = process.env.NEXT_PUBLIC_BANUBA_EFFECT_URL || "";
 const USE_BANUBA = process.env.NEXT_PUBLIC_USE_BANUBA === "true";
 const MIN_FACE_RATIO = 0.55;
 const CAMERA_PREF_KEY = "kids_photo_booth_camera";
-const PREFERRED_CAMERA_MATCH = [/insta360/i, /insta 360/i, /link/i, /virtual/i, /controller/i];
+const PREFERRED_CAMERA_MATCH = [/logitech/i, /c920e/i, /c920/i, /insta360/i, /insta 360/i, /link/i, /virtual/i, /controller/i];
 let faceApiPromise = null;
 
 async function loadFaceApi() {

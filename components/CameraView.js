@@ -12,7 +12,7 @@ const BANUBA_TOKEN = process.env.NEXT_PUBLIC_BANUBA_TOKEN;
 const BANUBA_EFFECT_URL = process.env.NEXT_PUBLIC_BANUBA_EFFECT_URL || "";
 const USE_BANUBA = process.env.NEXT_PUBLIC_USE_BANUBA === "true";
 const CAMERA_PREF_KEY = "kids_photo_booth_camera";
-const PREFERRED_CAMERA_MATCH = [/insta360/i, /insta 360/i, /link/i, /virtual/i, /controller/i];
+const PREFERRED_CAMERA_MATCH = [/logitech/i, /c920e/i, /c920/i, /insta360/i, /insta 360/i, /link/i, /virtual/i, /controller/i];
 const BANUBA_MODULES = [
   "/banuba/modules/face_tracker.zip",
   "/banuba/modules/makeup.zip",
@@ -271,6 +271,15 @@ export default function CameraView({
     reader.readAsDataURL(blob);
   });
 
+  const captureWithRetry = async (attempts = 3) => {
+    for (let i = 0; i < attempts; i++) {
+      const dataUrl = await takeFrame();
+      if (dataUrl) return dataUrl;
+      await sleep(180);
+    }
+    return null;
+  };
+
   const takeFrame = async () => {
     if (banubaCaptureRef.current) {
       try {
@@ -282,10 +291,12 @@ export default function CameraView({
       } catch (e) {
         console.error(e);
       }
+      return null;
     }
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return null;
+    if (video.readyState < 2 || !video.videoWidth || !video.videoHeight) return null;
 
     const w = video.videoWidth || 1280;
     const h = video.videoHeight || 720;
@@ -305,12 +316,16 @@ export default function CameraView({
 
     const shots = [];
     for (let i = 0; i < burstCount; i++) {
-      const dataUrl = await takeFrame();
+      const dataUrl = await captureWithRetry();
       if (dataUrl) shots.push(dataUrl);
       await sleep(burstIntervalMs);
     }
 
     setCapturing(false);
+    if (!shots.length) {
+      setError("Capture nahi ho saka. Camera frame nahi mila. Retry karo.");
+      return;
+    }
     onCaptured?.(shots);
   };
 
