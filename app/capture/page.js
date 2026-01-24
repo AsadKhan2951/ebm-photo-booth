@@ -98,7 +98,7 @@ export default function CaptureScreen() {
         const detector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
         const faces = await detector.detect(canvas);
         if (!faces || !faces.length) {
-          setDistanceMsg("Face detect nahi hua. Thora roshni me aa jao.");
+          setDistanceMsg("Face was not detected. Please move into better lighting.");
           return false;
         }
         const box = faces[0].boundingBox;
@@ -110,7 +110,7 @@ export default function CaptureScreen() {
           new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.4 })
         );
         if (!detection?.box) {
-          setDistanceMsg("Face detect nahi hua. Thora roshni me aa jao.");
+          setDistanceMsg("Face was not detected. Please move into better lighting.");
           return false;
         }
         ratio = Math.max(

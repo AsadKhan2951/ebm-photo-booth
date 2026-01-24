@@ -42,7 +42,7 @@ const PRINT_CARD_IMAGE = {
 
 export default function YourCreationScreen() {
   const router = useRouter();
-  const { state } = useBooth();
+  const { state, resetAll } = useBooth();
   const [toast, setToast] = useState("");
   const [printing, setPrinting] = useState(false);
 
@@ -60,7 +60,10 @@ export default function YourCreationScreen() {
     if (!state.shots?.length) router.replace("/capture");
   }, [state.shots, router]);
 
-  const goDone = () => router.push("/all-done");
+  const goHome = () => {
+    resetAll();
+    router.replace("/");
+  };
 
   const loadImage = (src) =>
     new Promise((resolve, reject) => {
@@ -261,9 +264,26 @@ export default function YourCreationScreen() {
   };
 
   const printImage = (dataUrl) => {
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(`
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      iframe.remove();
+      return;
+    }
+
+    doc.open();
+    doc.write(`
+      <!doctype html>
       <html>
         <head>
           <title>Print Photo</title>
@@ -273,14 +293,29 @@ export default function YourCreationScreen() {
           </style>
         </head>
         <body>
-          <img src="${dataUrl}" />
-          <script>
-            setTimeout(() => { window.print(); window.close(); }, 350);
-          </script>
+          <img id="print-img" src="${dataUrl}" />
         </body>
       </html>
     `);
-    w.document.close();
+    doc.close();
+
+    const cleanup = () => iframe.remove();
+    const triggerPrint = () => {
+      const w = iframe.contentWindow;
+      if (!w) return;
+      w.focus();
+      w.print();
+    };
+
+    const img = doc.getElementById("print-img");
+    if (img) {
+      img.onload = triggerPrint;
+      img.onerror = cleanup;
+    } else {
+      triggerPrint();
+    }
+
+    iframe.contentWindow?.addEventListener("afterprint", cleanup);
   };
 
   const fakeEmailSend = async () => {
@@ -294,12 +329,12 @@ export default function YourCreationScreen() {
     composePrintImage(finalImg, characterId)
       .then((composed) => printImage(composed))
       .finally(() => setPrinting(false));
-    goDone();
+    goHome();
   };
 
   const onEmail = async () => {
     await fakeEmailSend();
-    goDone();
+    goHome();
   };
 
   const onBoth = async () => {
@@ -312,7 +347,7 @@ export default function YourCreationScreen() {
       setPrinting(false);
     }
     await fakeEmailSend();
-    goDone();
+    goHome();
   };
 
   return (

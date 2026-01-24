@@ -7,9 +7,26 @@ import { GhostButton, PrimaryButton } from "../../components/Button";
 import { useBooth } from "../../context/BoothContext";
 
 function printImage(dataUrl) {
-  const w = window.open("", "_blank");
-  if (!w) return;
-  w.document.write(`
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.style.opacity = "0";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow?.document;
+  if (!doc) {
+    iframe.remove();
+    return;
+  }
+
+  doc.open();
+  doc.write(`
+    <!doctype html>
     <html>
       <head>
         <title>Print Photo</title>
@@ -19,14 +36,29 @@ function printImage(dataUrl) {
         </style>
       </head>
       <body>
-        <img src="${dataUrl}" />
-        <script>
-          setTimeout(() => { window.print(); window.close(); }, 350);
-        </script>
+        <img id="print-img" src="${dataUrl}" />
       </body>
     </html>
   `);
-  w.document.close();
+  doc.close();
+
+  const cleanup = () => iframe.remove();
+  const triggerPrint = () => {
+    const w = iframe.contentWindow;
+    if (!w) return;
+    w.focus();
+    w.print();
+  };
+
+  const img = doc.getElementById("print-img");
+  if (img) {
+    img.onload = triggerPrint;
+    img.onerror = cleanup;
+  } else {
+    triggerPrint();
+  }
+
+  iframe.contentWindow?.addEventListener("afterprint", cleanup);
 }
 
 export default function Screen6() {
