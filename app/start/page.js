@@ -102,9 +102,9 @@ export default function StartScreen() {
             className="absolute left-0 bottom-0 w-full h-auto"
             draggable="false"
           />
-          <div className="absolute left-1/2 top-[19%] bottom-[18%] -translate-x-1/2 w-[62%] flex flex-col items-center">
+          <div className="absolute left-1/2 top-[25%] bottom-[18%] -translate-x-1/2 w-[90%] flex flex-col items-center">
             <div className="text-center">
-              <div className="text-white font-extrabold tracking-wide text-[clamp(16px,2.7vw,28px)]">
+              <div className="text-[#2d2bb8] font-extrabold tracking-wide text-[clamp(16px,2.7vw,28px)]">
                 ENTER DETAILS
               </div>
               <div className="text-[#2d2bb8] font-semibold text-[clamp(10px,1.9vw,17px)]">
@@ -116,7 +116,7 @@ export default function StartScreen() {
               className="w-full flex flex-col"
               style={{ gap: "clamp(5px, 1.2vw, 10px)" }}
             >
-              <label className="text-white font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
+              <label className="text-[#2d2bb8] font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
                 NAME
                 <input
                   className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#2d2bb8] placeholder:text-[#2d2bb8]/70 outline-none"
@@ -128,7 +128,7 @@ export default function StartScreen() {
                 />
               </label>
 
-              <label className="text-white font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
+              <label className="text-[#2d2bb8] font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
                 AGE
                 <input
                   className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#2d2bb8] placeholder:text-[#2d2bb8]/70 outline-none"
@@ -141,7 +141,7 @@ export default function StartScreen() {
                 />
               </label>
 
-              <label className="text-white font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
+              <label className="text-[#2d2bb8] font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
                 EMAIL ADDRESS
                 <input
                   className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#2d2bb8] placeholder:text-[#2d2bb8]/70 outline-none"
@@ -153,7 +153,7 @@ export default function StartScreen() {
                 />
               </label>
 
-              <label className="text-white font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
+              <label className="text-[#2d2bb8] font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
                 CONTACT NUMBER
                 <input
                   className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#2d2bb8] placeholder:text-[#2d2bb8]/70 outline-none"
@@ -177,12 +177,13 @@ export default function StartScreen() {
               >
                 <img src={IMG.button} alt="" className="w-full h-auto" draggable="false" />
               </button>
+            
+            </div>
             {error ? (
               <div className="mt-2 rounded-lg bg-white/70 px-3 py-1 text-center text-xs font-semibold text-[#2d2bb8]">
                 {error}
               </div>
             ) : null}
-            </div>
           </div>
 
           {keyboardOpen ? (
