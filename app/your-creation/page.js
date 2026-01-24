@@ -75,6 +75,23 @@ export default function YourCreationScreen() {
     router.replace("/");
   };
 
+  const savePrintRecord = async (dataUrl, action) => {
+    try {
+      await fetch("/api/prints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageData: dataUrl,
+          action,
+          characterId,
+          user: state.user || null
+        })
+      });
+    } catch (err) {
+      console.warn("Failed to save print image", err);
+    }
+  };
+
   const loadImage = (src) =>
     new Promise((resolve, reject) => {
       const img = new Image();
@@ -358,6 +375,7 @@ export default function YourCreationScreen() {
     setPrinting(true);
     try {
       const composed = await composePrintImage(finalImg, characterId);
+      await savePrintRecord(composed, "print");
       await printImage(composed);
     } finally {
       setPrinting(false);
@@ -375,6 +393,7 @@ export default function YourCreationScreen() {
     setPrinting(true);
     try {
       const composed = await composePrintImage(finalImg, characterId);
+      await savePrintRecord(composed, "print_email");
       await printImage(composed);
     } finally {
       setPrinting(false);

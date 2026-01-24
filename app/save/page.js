@@ -114,8 +114,26 @@ export default function Screen6() {
     router.replace("/");
   };
 
+  const savePrintRecord = async (dataUrl, action) => {
+    try {
+      await fetch("/api/prints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageData: dataUrl,
+          action,
+          characterId: state.character?.id || null,
+          user: state.user || null
+        })
+      });
+    } catch (err) {
+      console.warn("Failed to save print image", err);
+    }
+  };
+
   const onPrint = async () => {
     if (!finalImg) return;
+    await savePrintRecord(finalImg, "print");
     await printImage(finalImg);
     finishSession();
   };
@@ -125,6 +143,7 @@ export default function Screen6() {
   };
   const onBoth = async () => {
     if (finalImg) {
+      await savePrintRecord(finalImg, "print_email");
       await printImage(finalImg);
     }
     await fakeEmailSend();
