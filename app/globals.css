@@ -85,4 +85,21 @@
     animation-timing-function: ease-in;
     animation-fill-mode: forwards;
   }
+
+  @media (orientation: portrait) {
+    .kids-font {
+      padding: 0 !important;
+      align-items: stretch !important;
+      justify-content: stretch !important;
+    }
+
+    .kids-font > .aspect-\[9\/16\] {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+  }
 }
