@@ -1,11 +1,27 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 
 export const runtime = "nodejs";
 
 const STORAGE_DIR = path.join(process.cwd(), "storage", "prints");
 const LOG_PATH = path.join(STORAGE_DIR, "log.jsonl");
+
+const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+const CLOUD_KEY = process.env.CLOUDINARY_API_KEY;
+const CLOUD_SECRET = process.env.CLOUDINARY_API_SECRET;
+const CLOUD_FOLDER = process.env.CLOUDINARY_FOLDER || "photo-booth";
+const USE_CLOUDINARY = Boolean(CLOUD_NAME && CLOUD_KEY && CLOUD_SECRET) || Boolean(process.env.CLOUDINARY_URL);
+
+if (USE_CLOUDINARY) {
+  cloudinary.config({
+    cloud_name: CLOUD_NAME,
+    api_key: CLOUD_KEY,
+    api_secret: CLOUD_SECRET,
+    secure: true
+  });
+}
 
 function safeExt(mime) {
   const ext = mime.split("/")[1] || "png";
@@ -30,6 +46,27 @@ export async function POST(req) {
     const base64 = match[2].replace(/\s/g, "");
     const buffer = Buffer.from(base64, "base64");
     const ext = safeExt(mime) || "png";
+
+    if (USE_CLOUDINARY) {
+      const action = body?.action || "print";
+      const characterId = body?.characterId || "unknown";
+      const upload = await cloudinary.uploader.upload(imageData, {
+        folder: CLOUD_FOLDER,
+        resource_type: "image",
+        tags: ["photo-booth", action, characterId],
+        context: {
+          action,
+          characterId
+        }
+      });
+      return NextResponse.json({
+        ok: true,
+        cloudinary: {
+          publicId: upload.public_id,
+          url: upload.secure_url
+        }
+      });
+    }
 
     await fs.mkdir(STORAGE_DIR, { recursive: true });
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
