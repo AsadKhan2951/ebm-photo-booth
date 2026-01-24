@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useBooth } from "../context/BoothContext";
 
 const BG_URL = "/assets/Main%20Screen/BG.jpg";
@@ -23,19 +22,11 @@ const IMG = {
 export default function MainScreen() {
   const router = useRouter();
   const { resetAll } = useBooth();
-  const searchParams = useSearchParams();
-  const resetParam = searchParams.get("reset");
 
   const onBegin = () => {
     resetAll();
     router.push("/start");
   };
-
-  useEffect(() => {
-    if (resetParam !== "1") return;
-    resetAll();
-    router.replace("/");
-  }, [resetParam, resetAll, router]);
 
   return (
     <div className="min-h-screen w-full bg-[#2a0b4f] flex items-center justify-center px-4 py-6 kids-font">
