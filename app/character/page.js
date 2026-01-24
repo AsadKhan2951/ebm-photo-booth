@@ -37,20 +37,6 @@ const CHARACTERS = [
     layout: { charLeft: 15, charWidth: 68, charTop: 36, nameWidth: 90, shapeWidth: 45, selectWidth: 193 }
   },
   {
-    id: "liya",
-    name: "LIYA",
-    bg: "/assets/Liya/BG.jpg",
-    heading: "/assets/Liya/Heading.png",
-    text: "/assets/Liya/Text.png",
-    character: "/assets/Liya/Liya.png",
-    shape: "/assets/Liya/shape.png",
-    nameImage: "/assets/Liya/Name.png",
-    select: "/assets/Liya/Button.png",
-    leftArrow: "/assets/Liya/Arrow.png",
-    rightArrow: "/assets/Liya/Arrow-2.png",
-    layout: { charLeft: 15, charWidth: 68, charTop: 37, nameWidth: 70, shapeWidth: 45, selectWidth: 193 }
-  },
-  {
     id: "teddy",
     name: "GLUCO TEDDY",
     bg: "/assets/Teddy/BG.png",

@@ -94,10 +94,39 @@ export default function Screen6() {
     if (!finalImg) router.replace("/previews");
   }, [finalImg, router]);
 
-  const fakeEmailSend = async () => {
-    // Placeholder: yahan backend API laga ke real email send karoge.
-    setToast("Email queued (demo). Backend add karo to real email jayegi.");
-    setTimeout(() => setToast(""), 2500);
+  const sendEmail = async (imageData) => {
+    const email = String(state.user?.email || "").trim();
+    if (!email) {
+      setToast("Email address missing. Please enter your email.");
+      setTimeout(() => setToast(""), 2200);
+      return false;
+    }
+    try {
+      const res = await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: email,
+          imageData,
+          subject: "Your Photo Booth Print",
+          text: "Thanks for visiting! Your photo is attached."
+        })
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        setToast(payload.error || "Email failed. Please try again.");
+        setTimeout(() => setToast(""), 2200);
+        return false;
+      }
+      setToast("Email sent successfully.");
+      setTimeout(() => setToast(""), 2200);
+      return true;
+    } catch (err) {
+      console.warn("Email send failed", err);
+      setToast("Email failed. Please try again.");
+      setTimeout(() => setToast(""), 2200);
+      return false;
+    }
   };
 
   const finishSession = () => {
@@ -138,16 +167,18 @@ export default function Screen6() {
     finishSession();
   };
   const onEmail = async () => {
-    await fakeEmailSend();
-    finishSession();
+    if (!finalImg) return;
+    const ok = await sendEmail(finalImg);
+    if (ok) finishSession();
   };
   const onBoth = async () => {
     if (finalImg) {
       await savePrintRecord(finalImg, "print_email");
       await printImage(finalImg);
     }
-    await fakeEmailSend();
-    finishSession();
+    if (!finalImg) return;
+    const ok = await sendEmail(finalImg);
+    if (ok) finishSession();
   };
 
   return (

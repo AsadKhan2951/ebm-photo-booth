@@ -75,6 +75,41 @@ export default function YourCreationScreen() {
     router.replace("/");
   };
 
+  const sendEmail = async (imageData) => {
+    const email = String(state.user?.email || "").trim();
+    if (!email) {
+      setToast("Email address missing. Please enter your email.");
+      setTimeout(() => setToast(""), 2200);
+      return false;
+    }
+    try {
+      const res = await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: email,
+          imageData,
+          subject: "Your Photo Booth Print",
+          text: "Thanks for visiting! Your photo is attached."
+        })
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        setToast(payload.error || "Email failed. Please try again.");
+        setTimeout(() => setToast(""), 2200);
+        return false;
+      }
+      setToast("Email sent successfully.");
+      setTimeout(() => setToast(""), 2200);
+      return true;
+    } catch (err) {
+      console.warn("Email send failed", err);
+      setToast("Email failed. Please try again.");
+      setTimeout(() => setToast(""), 2200);
+      return false;
+    }
+  };
+
   const savePrintRecord = async (dataUrl, action) => {
     try {
       await fetch("/api/prints", {
@@ -365,11 +400,6 @@ export default function YourCreationScreen() {
     }
   });
 
-  const fakeEmailSend = async () => {
-    setToast("Email queued (demo). Backend add karo to real email jayegi.");
-    setTimeout(() => setToast(""), 2200);
-  };
-
   const onPrint = async () => {
     if (!finalImg || printing) return;
     setPrinting(true);
@@ -384,22 +414,31 @@ export default function YourCreationScreen() {
   };
 
   const onEmail = async () => {
-    await fakeEmailSend();
-    finishSession();
+    if (!finalImg || printing) return;
+    setPrinting(true);
+    try {
+      const composed = await composePrintImage(finalImg, characterId);
+      const ok = await sendEmail(composed);
+      if (ok) finishSession();
+    } finally {
+      setPrinting(false);
+    }
   };
 
   const onBoth = async () => {
     if (!finalImg || printing) return;
     setPrinting(true);
+    let composed = null;
     try {
-      const composed = await composePrintImage(finalImg, characterId);
+      composed = await composePrintImage(finalImg, characterId);
       await savePrintRecord(composed, "print_email");
       await printImage(composed);
     } finally {
       setPrinting(false);
     }
-    await fakeEmailSend();
-    finishSession();
+    if (!composed) return;
+    const ok = await sendEmail(composed);
+    if (ok) finishSession();
   };
 
   return (
