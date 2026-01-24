@@ -179,11 +179,11 @@ export default function CameraView({
         console.error(e);
         const name = e?.name || "";
         if (name === "NotAllowedError") {
-          setError("Camera permission denied. Chrome me site camera allow karo.");
+          setError("Camera permission denied. Please allow camera access for the site in Chrome.");
         } else if (selectedDeviceId) {
-          setError("Selected camera available nahi hai. Insta360 connect karein ya list se dusra camera choose karein.");
+          setError("The selected camera is not available. Please connect your Insta360 camera or choose another camera from the list.");
         } else {
-          setError("Camera access nahi ho raha. WebCam busy hai to close karke retry karo.");
+          setError("Camera access is not working. If the webcam is busy, please close other applications and try again.");
         }
       }
     }

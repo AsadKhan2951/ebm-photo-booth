@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation";
 import { useBooth } from "../../context/BoothContext";
 import { useMemo, useState } from "react";
 
-const BG_URL = "/assets/Start%20Screen/Started-Screen.jpg";
 const IMG = {
-  button: "/assets/Start%20Screen/Select.png"
+  button: "/assets/Start%20Screen/Select.png",
+  layerTop: "/assets/Start%20Screen/Layer-Top.jpg",
+  layerBottom: "/assets/Start%20Screen/Layer-Bottom.jpg"
 };
 
 export default function StartScreen() {
@@ -25,12 +26,13 @@ export default function StartScreen() {
     if (!form.email.trim()) return false;
     // simple email check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return false;
+    if (!form.phone.trim()) return false;
     return true;
   }, [form]);
 
   const onNext = () => {
     if (!valid) {
-      setError("Please complete all fields to continue.");
+      setError("Name, age, email, and contact number are required.");
       return;
     }
     setError("");
@@ -83,68 +85,81 @@ export default function StartScreen() {
   ];
 
   return (
-    <div className="min-h-screen w-full bg-[#0b4bc0] flex items-center justify-center px-4 py-6 kids-font">
+    <div className="min-h-screen w-full bg-[#f6c11e] flex items-center justify-center px-4 py-6 kids-font">
       <div className="relative w-full max-w-[735px] aspect-[9/16] overflow-hidden rounded-[32px] shadow-2xl">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${BG_URL})` }}
-        />
+        <div className="absolute inset-0 bg-[#f6c11e]" />
 
         <div className="absolute inset-0">
-          <div className="absolute left-1/2 top-[18%] bottom-[24%] -translate-x-1/2 w-[72%] flex flex-col items-center">
+          <img
+            src={IMG.layerTop}
+            alt=""
+            className="absolute left-0 top-0 w-full h-auto"
+            draggable="false"
+          />
+          <img
+            src={IMG.layerBottom}
+            alt=""
+            className="absolute left-0 bottom-0 w-full h-auto"
+            draggable="false"
+          />
+          <div className="absolute left-1/2 top-[19%] bottom-[18%] -translate-x-1/2 w-[62%] flex flex-col items-center">
             <div className="text-center">
-              <div className="text-white font-extrabold tracking-wide text-[clamp(20px,3.6vw,34px)]">
+              <div className="text-white font-extrabold tracking-wide text-[clamp(16px,2.7vw,28px)]">
                 ENTER DETAILS
               </div>
-              <div className="text-[#f7c640] font-semibold text-[clamp(12px,2.4vw,20px)]">
+              <div className="text-[#2d2bb8] font-semibold text-[clamp(10px,1.9vw,17px)]">
                 Fill in your information
               </div>
             </div>
 
             <div
               className="w-full flex flex-col"
-              style={{ gap: "clamp(6px, 1.8vw, 14px)" }}
+              style={{ gap: "clamp(5px, 1.2vw, 10px)" }}
             >
-              <label className="text-white font-bold tracking-wide text-[clamp(11px,1.8vw,16px)]">
+              <label className="text-white font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
                 NAME
                 <input
-                  className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-transparent px-4 text-white outline-none"
-                  style={{ height: "clamp(30px, 5.4vw, 46px)" }}
+                  className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#2d2bb8] placeholder:text-[#2d2bb8]/70 outline-none"
+                  style={{ height: "clamp(26px, 4.3vw, 38px)" }}
                   value={form.name}
+                  placeholder="Enter your name"
                   onChange={(e) => { setError(""); setForm((s) => ({ ...s, name: e.target.value })); }}
                   onFocus={() => openKeyboard("name")}
                 />
               </label>
 
-              <label className="text-white font-bold tracking-wide text-[clamp(11px,1.8vw,16px)]">
+              <label className="text-white font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
                 AGE
                 <input
-                  className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-transparent px-4 text-white outline-none"
-                  style={{ height: "clamp(30px, 5.4vw, 46px)" }}
+                  className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#2d2bb8] placeholder:text-[#2d2bb8]/70 outline-none"
+                  style={{ height: "clamp(26px, 4.3vw, 38px)" }}
                   inputMode="numeric"
                   value={form.age}
+                  placeholder="Enter your age"
                   onChange={(e) => { setError(""); setForm((s) => ({ ...s, age: e.target.value })); }}
                   onFocus={() => openKeyboard("age")}
                 />
               </label>
 
-              <label className="text-white font-bold tracking-wide text-[clamp(11px,1.8vw,16px)]">
+              <label className="text-white font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
                 EMAIL ADDRESS
                 <input
-                  className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-transparent px-4 text-white outline-none"
-                  style={{ height: "clamp(30px, 5.4vw, 46px)" }}
+                  className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#2d2bb8] placeholder:text-[#2d2bb8]/70 outline-none"
+                  style={{ height: "clamp(26px, 4.3vw, 38px)" }}
                   value={form.email}
+                  placeholder="your@email.com"
                   onChange={(e) => { setError(""); setForm((s) => ({ ...s, email: e.target.value })); }}
                   onFocus={() => openKeyboard("email")}
                 />
               </label>
 
-              <label className="text-white font-bold tracking-wide text-[clamp(11px,1.8vw,16px)]">
+              <label className="text-white font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
                 CONTACT NUMBER
                 <input
-                  className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-transparent px-4 text-white outline-none"
-                  style={{ height: "clamp(30px, 5.4vw, 46px)" }}
+                  className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#2d2bb8] placeholder:text-[#2d2bb8]/70 outline-none"
+                  style={{ height: "clamp(26px, 4.3vw, 38px)" }}
                   value={form.phone}
+                  placeholder="Phone number"
                   onChange={(e) => { setError(""); setForm((s) => ({ ...s, phone: e.target.value })); }}
                   onFocus={() => openKeyboard("phone")}
                 />
@@ -152,7 +167,7 @@ export default function StartScreen() {
             </div>
 
             <div
-              className={`mt-5 w-[30%] transition-opacity ${keyboardOpen ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+              className={`mt-2 w-[26%] transition-opacity ${keyboardOpen ? "opacity-0 pointer-events-none" : "opacity-100"}`}
             >
               <button
                 type="button"
@@ -162,11 +177,11 @@ export default function StartScreen() {
               >
                 <img src={IMG.button} alt="" className="w-full h-auto" draggable="false" />
               </button>
-              {error ? (
-                <div className="mt-2 text-center text-sm font-semibold text-white drop-shadow-sm">
-                  {error}
-                </div>
-              ) : null}
+            {error ? (
+              <div className="mt-2 rounded-lg bg-white/70 px-3 py-1 text-center text-xs font-semibold text-[#2d2bb8]">
+                {error}
+              </div>
+            ) : null}
             </div>
           </div>
 
