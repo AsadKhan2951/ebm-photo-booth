@@ -143,7 +143,7 @@ export default function Screen2() {
 
   const onSelect = () => {
     setCharacter({ id: current.id, name: current.name });
-    router.push("/capture");
+    router.push("/countdown");
   };
 
   return (

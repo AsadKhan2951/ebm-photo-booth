@@ -39,10 +39,11 @@ const PRINT_CARD_IMAGE = {
   pipper: { top: 32, width: 72 },
   default: { top: 28, width: 84 }
 };
+const STORAGE_KEY = "kids_photo_booth_v1";
 
 export default function YourCreationScreen() {
   const router = useRouter();
-  const { state } = useBooth();
+  const { state, resetAll } = useBooth();
   const [toast, setToast] = useState("");
   const [printing, setPrinting] = useState(false);
 
@@ -60,7 +61,19 @@ export default function YourCreationScreen() {
     if (!state.shots?.length) router.replace("/capture");
   }, [state.shots, router]);
 
-  const goHome = () => router.replace("/?reset=1");
+  const finishSession = () => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {}
+    resetAll();
+    if (typeof window !== "undefined") {
+      window.location.replace("/");
+      return;
+    }
+    router.replace("/");
+  };
 
   const loadImage = (src) =>
     new Promise((resolve, reject) => {
@@ -260,7 +273,9 @@ export default function YourCreationScreen() {
     return canvas.toDataURL("image/png");
   };
 
-  const printImage = (dataUrl) => {
+  const printImage = (dataUrl) => new Promise((resolve) => {
+    const originalTitle = document.title;
+    document.title = "";
     const iframe = document.createElement("iframe");
     iframe.setAttribute("aria-hidden", "true");
     iframe.style.position = "fixed";
@@ -275,6 +290,7 @@ export default function YourCreationScreen() {
     const doc = iframe.contentWindow?.document;
     if (!doc) {
       iframe.remove();
+      resolve();
       return;
     }
 
@@ -288,7 +304,7 @@ export default function YourCreationScreen() {
             @page { margin: 0; size: 5in 7in; }
             html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
             body { background: #0b2d64; }
-            img { width: 100%; height: 100%; object-fit: contain; display: block; }
+            img { width: 100%; height: 100%; object-fit: cover; display: block; }
             @media print {
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
@@ -301,12 +317,26 @@ export default function YourCreationScreen() {
     `);
     doc.close();
 
-    const cleanup = () => iframe.remove();
+    let done = false;
+    const cleanup = () => {
+      if (done) return;
+      done = true;
+      document.title = originalTitle;
+      iframe.remove();
+      resolve();
+    };
+
     const triggerPrint = () => {
       const w = iframe.contentWindow;
-      if (!w) return;
+      if (!w) {
+        cleanup();
+        return;
+      }
+      const onAfterPrint = () => cleanup();
+      w.addEventListener("afterprint", onAfterPrint, { once: true });
       w.focus();
       w.print();
+      setTimeout(cleanup, 6000);
     };
 
     const img = doc.getElementById("print-img");
@@ -316,27 +346,28 @@ export default function YourCreationScreen() {
     } else {
       triggerPrint();
     }
-
-    iframe.contentWindow?.addEventListener("afterprint", cleanup);
-  };
+  });
 
   const fakeEmailSend = async () => {
     setToast("Email queued (demo). Backend add karo to real email jayegi.");
     setTimeout(() => setToast(""), 2200);
   };
 
-  const onPrint = () => {
+  const onPrint = async () => {
     if (!finalImg || printing) return;
     setPrinting(true);
-    composePrintImage(finalImg, characterId)
-      .then((composed) => printImage(composed))
-      .finally(() => setPrinting(false));
-    goHome();
+    try {
+      const composed = await composePrintImage(finalImg, characterId);
+      await printImage(composed);
+    } finally {
+      setPrinting(false);
+    }
+    finishSession();
   };
 
   const onEmail = async () => {
     await fakeEmailSend();
-    goHome();
+    finishSession();
   };
 
   const onBoth = async () => {
@@ -344,12 +375,12 @@ export default function YourCreationScreen() {
     setPrinting(true);
     try {
       const composed = await composePrintImage(finalImg, characterId);
-      printImage(composed);
+      await printImage(composed);
     } finally {
       setPrinting(false);
     }
     await fakeEmailSend();
-    goHome();
+    finishSession();
   };
 
   return (

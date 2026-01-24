@@ -6,7 +6,11 @@ import ScreenCard from "../../components/ScreenCard";
 import { GhostButton, PrimaryButton } from "../../components/Button";
 import { useBooth } from "../../context/BoothContext";
 
+const STORAGE_KEY = "kids_photo_booth_v1";
+
 function printImage(dataUrl) {
+  const originalTitle = document.title;
+  document.title = "";
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
   iframe.style.position = "fixed";
@@ -33,7 +37,7 @@ function printImage(dataUrl) {
         <style>
           @page { margin: 0; size: 5in 7in; }
           html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
-          img { width: 100%; height: 100%; object-fit: contain; display: block; }
+          img { width: 100%; height: 100%; object-fit: cover; display: block; }
           @media print {
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           }
@@ -46,23 +50,37 @@ function printImage(dataUrl) {
   `);
   doc.close();
 
-  const cleanup = () => iframe.remove();
-  const triggerPrint = () => {
-    const w = iframe.contentWindow;
-    if (!w) return;
-    w.focus();
-    w.print();
-  };
+  return new Promise((resolve) => {
+    let done = false;
+    const cleanup = () => {
+      if (done) return;
+      done = true;
+      document.title = originalTitle;
+      iframe.remove();
+      resolve();
+    };
 
-  const img = doc.getElementById("print-img");
-  if (img) {
-    img.onload = triggerPrint;
-    img.onerror = cleanup;
-  } else {
-    triggerPrint();
-  }
+    const triggerPrint = () => {
+      const w = iframe.contentWindow;
+      if (!w) {
+        cleanup();
+        return;
+      }
+      const onAfterPrint = () => cleanup();
+      w.addEventListener("afterprint", onAfterPrint, { once: true });
+      w.focus();
+      w.print();
+      setTimeout(cleanup, 6000);
+    };
 
-  iframe.contentWindow?.addEventListener("afterprint", cleanup);
+    const img = doc.getElementById("print-img");
+    if (img) {
+      img.onload = triggerPrint;
+      img.onerror = cleanup;
+    } else {
+      triggerPrint();
+    }
+  });
 }
 
 export default function Screen6() {
@@ -82,11 +100,35 @@ export default function Screen6() {
     setTimeout(() => setToast(""), 2500);
   };
 
-  const onPrint = () => finalImg && printImage(finalImg);
-  const onEmail = () => fakeEmailSend();
-  const onBoth = async () => {
-    onPrint();
+  const finishSession = () => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {}
+    resetAll();
+    if (typeof window !== "undefined") {
+      window.location.replace("/");
+      return;
+    }
+    router.replace("/");
+  };
+
+  const onPrint = async () => {
+    if (!finalImg) return;
+    await printImage(finalImg);
+    finishSession();
+  };
+  const onEmail = async () => {
     await fakeEmailSend();
+    finishSession();
+  };
+  const onBoth = async () => {
+    if (finalImg) {
+      await printImage(finalImg);
+    }
+    await fakeEmailSend();
+    finishSession();
   };
 
   return (

@@ -35,13 +35,15 @@ const BANUBA_MODULES = [
 
 export default function CaptureScreen() {
   const router = useRouter();
-  const { state } = useBooth();
+  const { state, setShots } = useBooth();
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const detectCanvasRef = useRef(null);
+  const captureCanvasRef = useRef(null);
   const banubaContainerRef = useRef(null);
   const banubaPlayerRef = useRef(null);
   const banubaWebcamRef = useRef(null);
+  const banubaCaptureRef = useRef(null);
   const useBanuba = USE_BANUBA && Boolean(BANUBA_TOKEN);
 
   const [ready, setReady] = useState(false);
@@ -77,6 +79,7 @@ export default function CaptureScreen() {
     }
     banubaPlayerRef.current = null;
     banubaWebcamRef.current = null;
+    banubaCaptureRef.current = null;
   };
 
   const checkFaceDistance = async () => {
@@ -137,8 +140,14 @@ export default function CaptureScreen() {
     setCheckingDistance(false);
     if (!ok) return;
 
+    const dataUrl = await takeSnapshot();
+    if (!dataUrl) {
+      setError("Capture nahi ho saka. Camera frame nahi mila. Retry karo.");
+      return;
+    }
+
     if (useBanuba) {
-      stopBanuba();
+      await stopBanuba();
     }
     stopStream();
     if (videoRef.current) {
@@ -146,7 +155,8 @@ export default function CaptureScreen() {
     }
     setReady(false);
     setError("");
-    setTimeout(() => router.push("/camera"), 180);
+    setShots([dataUrl]);
+    router.push("/your-character");
   };
 
   const refreshDevices = useCallback(async () => {
@@ -297,7 +307,7 @@ export default function CaptureScreen() {
 
     async function initBanuba() {
       try {
-        const { Player, Webcam, Dom, Effect, Module } = await import("@banuba/webar");
+        const { Player, Webcam, Dom, Effect, ImageCapture, Module } = await import("@banuba/webar");
         if (!active || !banubaContainerRef.current) return;
         const player = await Player.create({
           clientToken: BANUBA_TOKEN,
@@ -323,6 +333,7 @@ export default function CaptureScreen() {
         player.play();
         banubaPlayerRef.current = player;
         banubaWebcamRef.current = webcam;
+        banubaCaptureRef.current = new ImageCapture(player);
         setReady(true);
       } catch (err) {
         console.error(err);
@@ -337,6 +348,38 @@ export default function CaptureScreen() {
       stopBanuba();
     };
   }, [useBanuba, retryTick]);
+
+  const blobToDataUrl = (blob) => new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+
+  const takeSnapshot = async () => {
+    if (banubaCaptureRef.current) {
+      try {
+        const blob = await banubaCaptureRef.current.takePhoto({
+          format: "image/jpeg",
+          quality: 0.92
+        });
+        return await blobToDataUrl(blob);
+      } catch (err) {
+        console.error(err);
+      }
+      return null;
+    }
+    const video = videoRef.current;
+    if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return null;
+
+    const canvas = captureCanvasRef.current || document.createElement("canvas");
+    captureCanvasRef.current = canvas;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.filter = FILTER_STYLE;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.92);
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#0b2d64] flex items-center justify-center px-4 py-6 kids-font">
