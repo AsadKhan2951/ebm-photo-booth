@@ -42,7 +42,7 @@ const PRINT_CARD_IMAGE = {
 
 export default function YourCreationScreen() {
   const router = useRouter();
-  const { state, resetAll } = useBooth();
+  const { state } = useBooth();
   const [toast, setToast] = useState("");
   const [printing, setPrinting] = useState(false);
 
@@ -60,10 +60,7 @@ export default function YourCreationScreen() {
     if (!state.shots?.length) router.replace("/capture");
   }, [state.shots, router]);
 
-  const goHome = () => {
-    resetAll();
-    router.replace("/");
-  };
+  const goHome = () => router.replace("/?reset=1");
 
   const loadImage = (src) =>
     new Promise((resolve, reject) => {
@@ -286,10 +283,15 @@ export default function YourCreationScreen() {
       <!doctype html>
       <html>
         <head>
-          <title>Print Photo</title>
+          <title></title>
           <style>
-            body { margin: 0; display: grid; place-items: center; height: 100vh; background: #0b2d64; }
-            img { max-width: 100%; max-height: 100vh; }
+            @page { margin: 0; size: 5in 7in; }
+            html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+            body { background: #0b2d64; }
+            img { width: 100%; height: 100%; object-fit: contain; display: block; }
+            @media print {
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
           </style>
         </head>
         <body>
