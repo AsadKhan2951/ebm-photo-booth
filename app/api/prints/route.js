@@ -14,7 +14,17 @@ const CLOUD_SECRET = process.env.CLOUDINARY_API_SECRET;
 const CLOUD_FOLDER = process.env.CLOUDINARY_FOLDER || "photo-booth";
 const USE_CLOUDINARY = Boolean(CLOUD_NAME && CLOUD_KEY && CLOUD_SECRET) || Boolean(process.env.CLOUDINARY_URL);
 
-if (USE_CLOUDINARY) {
+function isPlaceholder(value) {
+  if (!value) return true;
+  const v = String(value).toLowerCase();
+  return v.includes("your_") || v.includes("changeme") || v.includes("example");
+}
+
+const CLOUDINARY_READY = !isPlaceholder(CLOUD_NAME)
+  && !isPlaceholder(CLOUD_KEY)
+  && !isPlaceholder(CLOUD_SECRET);
+
+if (USE_CLOUDINARY && CLOUDINARY_READY) {
   cloudinary.config({
     cloud_name: CLOUD_NAME,
     api_key: CLOUD_KEY,
@@ -47,7 +57,7 @@ export async function POST(req) {
     const buffer = Buffer.from(base64, "base64");
     const ext = safeExt(mime) || "png";
 
-    if (USE_CLOUDINARY) {
+    if (USE_CLOUDINARY && CLOUDINARY_READY) {
       const action = body?.action || "print";
       const characterId = body?.characterId || "unknown";
       const upload = await cloudinary.uploader.upload(imageData, {

@@ -3,10 +3,16 @@ import nodemailer from "nodemailer";
 
 export const runtime = "nodejs";
 
-const REQUIRED_ENV = ["SMTP_HOST", "SMTP_PORT", "SMTP_FROM"];
+const REQUIRED_ENV = ["SMTP_HOST", "SMTP_PORT", "SMTP_FROM", "SMTP_USER", "SMTP_PASS"];
+
+function isPlaceholder(value) {
+  if (!value) return true;
+  const v = String(value).toLowerCase();
+  return v.includes("your_") || v.includes("changeme") || v.includes("example");
+}
 
 function getMissingEnv() {
-  return REQUIRED_ENV.filter((key) => !process.env[key]);
+  return REQUIRED_ENV.filter((key) => isPlaceholder(process.env[key]));
 }
 
 function parseDataUrl(dataUrl) {
@@ -53,6 +59,11 @@ export async function POST(req) {
     const ext = safeExt(parsed.mime) || "png";
     const filename = `photo-booth.${ext}`;
 
+    const from = process.env.SMTP_FROM || "";
+    if (!/^[^@]+@[^@]+\.[^@]+$/.test(from.replace(/.*<|>.*/g, ""))) {
+      return NextResponse.json({ error: "SMTP_FROM must be a valid email address." }, { status: 500 });
+    }
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT) || 587,
@@ -63,7 +74,7 @@ export async function POST(req) {
     });
 
     const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM,
+      from,
       to,
       subject: body?.subject || "Your Photo Booth Print",
       text: body?.text || "Thanks for visiting! Your photo is attached.",
@@ -78,7 +89,14 @@ export async function POST(req) {
 
     return NextResponse.json({ ok: true, messageId: info.messageId });
   } catch (err) {
-    console.error("Failed to send email", err);
-    return NextResponse.json({ error: "Failed to send email." }, { status: 500 });
+    const message = err?.message || "Failed to send email.";
+    const details = {
+      code: err?.code || null,
+      responseCode: err?.responseCode || null,
+      command: err?.command || null,
+      response: err?.response || null
+    };
+    console.error("Failed to send email", message, details);
+    return NextResponse.json({ error: message, details }, { status: 500 });
   }
 }
