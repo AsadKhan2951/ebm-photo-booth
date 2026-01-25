@@ -37,7 +37,7 @@ function printImage(dataUrl) {
         <style>
           @page { margin: 0; size: 5in 7in; }
           html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-          img { width: 104%; height: 104%; object-fit: cover; display: block; margin: -2%; }
+          img { width: 100%; height: 100%; object-fit: cover; display: block; margin: -2%; }
           @media print {
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           }
