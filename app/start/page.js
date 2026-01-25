@@ -19,10 +19,6 @@ export default function StartScreen() {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   const valid = useMemo(() => {
-    if (!form.name.trim()) return false;
-    if (!String(form.age).trim()) return false;
-    const ageNum = Number(form.age);
-    if (!Number.isFinite(ageNum) || ageNum <= 0) return false;
     if (!form.email.trim()) return false;
     // simple email check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return false;
@@ -32,7 +28,7 @@ export default function StartScreen() {
 
   const onNext = () => {
     if (!valid) {
-      setError("Name, age, email, and contact number are required.");
+      setError("Email and contact number are required.");
       return;
     }
     setError("");
