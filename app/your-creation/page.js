@@ -356,7 +356,7 @@ export default function YourCreationScreen() {
             @page { margin: 0; size: 5in 7in; }
             html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
             body { background: #0b2d64; }
-            img { width: 98%; height: 98%; object-fit: contain; display: block; margin: 1% auto; }
+            img { width: 96%; height: 96%; object-fit: contain; display: block; margin: 2% auto; }
             @media print {
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
