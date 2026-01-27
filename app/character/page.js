@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useBooth } from "../../context/BoothContext";
 
 const BASE_LAYOUT = {
-  textTop: 12,
+  textTop: 6,
   textWidth: 68,
   charTop: 36,
   charWidth: 62,
@@ -34,7 +34,7 @@ const CHARACTERS = [
     select: "/assets/Migu/Select.png",
     leftArrow: "/assets/Migu/Left.png",
     rightArrow: "/assets/Migu/Right.png",
-    layout: { charLeft: 15, charWidth: 68, charTop: 36, nameWidth: 90, shapeWidth: 45, selectWidth: 193 }
+    layout: { charLeft: 15, charWidth: 68, charTop: 25, nameWidth: 90, shapeWidth: 45, selectWidth: 193 }
   },
   {
     id: "teddy",
@@ -48,7 +48,7 @@ const CHARACTERS = [
     select: "/assets/Teddy/Select.png",
     leftArrow: "/assets/Teddy/Arrow.png",
     rightArrow: "/assets/Teddy/Arrow-2.png",
-    layout: { charLeft: 2, charWidth: 100, charTop: 37, nameWidth: 62, shapeWidth: 45, selectWidth: 193 }
+    layout: { charLeft: 2, charWidth: 100, charTop: 25, nameWidth: 62, shapeWidth: 45, selectWidth: 193 }
   },
   {
     id: "pipper",
@@ -62,7 +62,7 @@ const CHARACTERS = [
     select: "/assets/Pipper/Select.png",
     leftArrow: "/assets/Pipper/Arrow.png",
     rightArrow: "/assets/Pipper/Arrow-2.png",
-    layout: { charLeft: 12, charWidth: 80, charTop: 32, nameWidth: 50, shapeWidth: 45, selectWidth: 193 }
+    layout: { charLeft: 12, charWidth: 80, charTop: 22, nameWidth: 50, shapeWidth: 45, selectWidth: 193 }
   }
 ];
 
@@ -142,9 +142,7 @@ export default function Screen2() {
           />
 
           <div className="absolute inset-0">
-            <div className="absolute left-1/2 top-[4%] -translate-x-1/2 w-[72%]">
-              <img src={current.heading} alt="Choose your character" className="w-full h-auto" draggable="false" />
-            </div>
+            
 
             <div
               className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-0"
@@ -160,7 +158,9 @@ export default function Screen2() {
               style={{ top: `${layout.charTop}%`, width: `${layout.charWidth}%`, left: `${layout.charLeft}%` }}
               draggable="false"
             />
-
+            <div className="absolute left-1/2 bottom-[26%] -translate-x-1/2 w-[72%]">
+              <img src={current.heading} alt="Choose your character" className="w-full h-auto" draggable="false" />
+            </div>
             <div
               className="absolute left-1/2 -translate-x-1/2 z-20"
               style={{ bottom: `${layout.shapeBottom}%`, width: `${layout.shapeWidth}%` }}
