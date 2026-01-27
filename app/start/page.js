@@ -15,8 +15,6 @@ export default function StartScreen() {
   const { state, setUser, resetAll } = useBooth();
   const [form, setForm] = useState(state.user);
   const [error, setError] = useState("");
-  const [activeField, setActiveField] = useState(null);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   const valid = useMemo(() => {
     if (!form.email.trim()) return false;
@@ -36,61 +34,20 @@ export default function StartScreen() {
     router.push("/character");
   };
 
-  const openKeyboard = (field) => {
-    setActiveField(field);
-    setKeyboardOpen(true);
-    setError("");
-  };
-
-  const closeKeyboard = () => {
-    setKeyboardOpen(false);
-    setActiveField(null);
-  };
-
-  const applyKey = (key) => {
-    if (!activeField) return;
-    setForm((prev) => {
-      const current = String(prev[activeField] ?? "");
-      let next = current;
-      if (key === "Backspace") {
-        next = current.slice(0, -1);
-      } else if (key === "Clear") {
-        next = "";
-      } else if (key === "Space") {
-        next = `${current} `;
-      } else if (key === "Done") {
-        return prev;
-      } else {
-        next = current + key;
-      }
-      if (activeField === "email") {
-        const raw = next.replace(/\s/g, "");
-        const local = raw.split("@")[0];
-        return { ...prev, email: local ? `${local}@gmail.com` : "" };
-      }
-      if (activeField === "phone") {
-        const digits = next.replace(/\D/g, "").slice(0, 11);
-        return { ...prev, phone: digits };
-      }
-      return { ...prev, [activeField]: next };
-    });
-    if (key === "Done") closeKeyboard();
-  };
-
-  const isNumeric = activeField === "age" || activeField === "phone";
-  const isEmail = activeField === "email";
-  const alphaRows = [
-    ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
-    ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
-    ["Z", "X", "C", "V", "B", "N", "M"]
-  ];
-  const emailRow = ["@", ".", "-", "_"];
-  const numericRows = [
-    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
-  ];
+  // On-screen keyboard removed; use physical keyboard.
 
   return (
     <div className="min-h-screen w-full bg-[#f6c11e] flex items-center justify-center px-4 py-6 kids-font">
+      <style jsx global>{`
+        input::-webkit-credentials-auto-fill-button,
+        input::-webkit-contacts-auto-fill-button {
+          visibility: hidden;
+          display: none !important;
+          pointer-events: none;
+          position: absolute;
+          right: 0;
+        }
+      `}</style>
       <div className="relative w-full max-w-[735px] aspect-[9/16] overflow-hidden rounded-[32px] shadow-2xl">
         <div className="absolute inset-0 bg-[#f6c11e]" />
 
@@ -128,8 +85,14 @@ export default function StartScreen() {
                   style={{ height: "clamp(26px, 4.3vw, 38px)" }}
                   value={form.name}
                   placeholder="Enter your name"
+                  autoComplete="new-password"
+                  name="name-field"
+                  id="name-field"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
                   onChange={(e) => { setError(""); setForm((s) => ({ ...s, name: e.target.value })); }}
-                  onFocus={() => openKeyboard("name")}
+                  onFocus={() => setError("")}
                 />
               </label>
 
@@ -141,8 +104,14 @@ export default function StartScreen() {
                   inputMode="numeric"
                   value={form.age}
                   placeholder="Enter your age"
+                  autoComplete="new-password"
+                  name="age-field"
+                  id="age-field"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
                   onChange={(e) => { setError(""); setForm((s) => ({ ...s, age: e.target.value })); }}
-                  onFocus={() => openKeyboard("age")}
+                  onFocus={() => setError("")}
                 />
               </label>
 
@@ -153,13 +122,19 @@ export default function StartScreen() {
                   style={{ height: "clamp(26px, 4.3vw, 38px)" }}
                   value={form.email}
                   placeholder="yourname"
+                  autoComplete="new-password"
+                  name="email-field"
+                  id="email-field"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
                   onChange={(e) => {
                     setError("");
                     const raw = e.target.value.replace(/\s/g, "");
                     const local = raw.split("@")[0];
                     setForm((s) => ({ ...s, email: local ? `${local}@gmail.com` : "" }));
                   }}
-                  onFocus={() => openKeyboard("email")}
+                  onFocus={() => setError("")}
                 />
               </label>
 
@@ -172,18 +147,24 @@ export default function StartScreen() {
                   placeholder="11-digit number"
                   inputMode="numeric"
                   pattern="\d*"
+                  autoComplete="new-password"
+                  name="phone-field"
+                  id="phone-field"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
                   onChange={(e) => {
                     setError("");
                     const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
                     setForm((s) => ({ ...s, phone: digits }));
                   }}
-                  onFocus={() => openKeyboard("phone")}
+                  onFocus={() => setError("")}
                 />
               </label>
             </div>
 
             <div
-              className={`mt-2 w-[26%] transition-opacity ${keyboardOpen ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+              className="mt-2 w-[26%] transition-opacity"
             >
               <button
                 type="button"
@@ -202,99 +183,7 @@ export default function StartScreen() {
             ) : null}
           </div>
 
-          {keyboardOpen ? (
-            <div className="absolute left-1/2 bottom-[6%] w-[92%] -translate-x-1/2 rounded-[18px] border-[2px] border-white/40 bg-[#0a3e9e]/95 p-3 text-white shadow-[0_18px_30px_rgba(0,0,0,0.35)]">
-              <div className="mb-2 flex items-center justify-between text-[12px] font-semibold tracking-wide">
-                <div className="uppercase">
-                  {activeField ? `${activeField} input` : "Keyboard"}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => applyKey("Done")}
-                  className="rounded-lg bg-white/90 px-3 py-1 text-[#0b4bc0]"
-                >
-                  Done
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                {(isNumeric ? numericRows : alphaRows).map((row) => (
-                  <div key={row.join("")} className="flex justify-center gap-2">
-                    {row.map((key) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => applyKey(key)}
-                        className="min-w-[32px] flex-1 rounded-xl bg-white/10 px-2 py-2 text-sm font-bold"
-                      >
-                        {key}
-                      </button>
-                    ))}
-                    {row === alphaRows[alphaRows.length - 1] && (
-                      <button
-                        type="button"
-                        onClick={() => applyKey("Backspace")}
-                        className="min-w-[52px] rounded-xl bg-white/10 px-3 py-2 text-sm font-bold"
-                      >
-                        ⌫
-                      </button>
-                    )}
-                    {isNumeric && row === numericRows[0] && (
-                      <button
-                        type="button"
-                        onClick={() => applyKey("Backspace")}
-                        className="min-w-[52px] rounded-xl bg-white/10 px-3 py-2 text-sm font-bold"
-                      >
-                        ⌫
-                      </button>
-                    )}
-                  </div>
-                ))}
-
-                {!isNumeric && (
-                  <div className="flex justify-center gap-2">
-                    {(isEmail ? emailRow : ["Space"]).map((key) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => applyKey(key === "Space" ? "Space" : key)}
-                        className="rounded-xl bg-white/10 px-3 py-2 text-sm font-bold"
-                        style={{ minWidth: key === "Space" ? "160px" : "48px" }}
-                      >
-                        {key === "Space" ? "Space" : key}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => applyKey("Clear")}
-                      className="rounded-xl bg-white/10 px-3 py-2 text-sm font-bold"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-
-                {isNumeric && (
-                  <div className="flex justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => applyKey("Clear")}
-                      className="rounded-xl bg-white/10 px-3 py-2 text-sm font-bold"
-                    >
-                      Clear
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => applyKey("Done")}
-                      className="rounded-xl bg-white/90 px-4 py-2 text-sm font-bold text-[#0b4bc0]"
-                    >
-                      Done
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : null}
+          
 
           <button
             type="button"
@@ -309,3 +198,5 @@ export default function StartScreen() {
     </div>
   );
 }
+
+
