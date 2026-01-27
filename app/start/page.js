@@ -20,15 +20,15 @@ export default function StartScreen() {
 
   const valid = useMemo(() => {
     if (!form.email.trim()) return false;
-    // simple email check
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return false;
-    if (!form.phone.trim()) return false;
+    // only gmail allowed
+    if (!/^[^\s@]+@gmail\.com$/i.test(form.email.trim())) return false;
+    if (!/^\d{11}$/.test(String(form.phone).trim())) return false;
     return true;
   }, [form]);
 
   const onNext = () => {
     if (!valid) {
-      setError("Email and contact number are required.");
+      setError("Only Gmail addresses are allowed, and phone must be 11 digits.");
       return;
     }
     setError("");
@@ -62,6 +62,15 @@ export default function StartScreen() {
         return prev;
       } else {
         next = current + key;
+      }
+      if (activeField === "email") {
+        const raw = next.replace(/\s/g, "");
+        const local = raw.split("@")[0];
+        return { ...prev, email: local ? `${local}@gmail.com` : "" };
+      }
+      if (activeField === "phone") {
+        const digits = next.replace(/\D/g, "").slice(0, 11);
+        return { ...prev, phone: digits };
       }
       return { ...prev, [activeField]: next };
     });
@@ -143,8 +152,13 @@ export default function StartScreen() {
                   className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#a424c7] placeholder:text-[#2d2bb8]/70 outline-none"
                   style={{ height: "clamp(26px, 4.3vw, 38px)" }}
                   value={form.email}
-                  placeholder="your@email.com"
-                  onChange={(e) => { setError(""); setForm((s) => ({ ...s, email: e.target.value })); }}
+                  placeholder="yourname"
+                  onChange={(e) => {
+                    setError("");
+                    const raw = e.target.value.replace(/\s/g, "");
+                    const local = raw.split("@")[0];
+                    setForm((s) => ({ ...s, email: local ? `${local}@gmail.com` : "" }));
+                  }}
                   onFocus={() => openKeyboard("email")}
                 />
               </label>
@@ -155,8 +169,14 @@ export default function StartScreen() {
                   className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#a424c7] placeholder:text-[#2d2bb8]/70 outline-none"
                   style={{ height: "clamp(26px, 4.3vw, 38px)" }}
                   value={form.phone}
-                  placeholder="Phone number"
-                  onChange={(e) => { setError(""); setForm((s) => ({ ...s, phone: e.target.value })); }}
+                  placeholder="11-digit number"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  onChange={(e) => {
+                    setError("");
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                    setForm((s) => ({ ...s, phone: digits }));
+                  }}
                   onFocus={() => openKeyboard("phone")}
                 />
               </label>

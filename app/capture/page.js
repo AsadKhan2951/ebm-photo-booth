@@ -10,7 +10,8 @@ const FILTER_STYLE = "brightness(1.08) contrast(1.2) saturate(1.3)";
 const BANUBA_TOKEN = process.env.NEXT_PUBLIC_BANUBA_TOKEN;
 const BANUBA_EFFECT_URL = process.env.NEXT_PUBLIC_BANUBA_EFFECT_URL || "";
 const USE_BANUBA = process.env.NEXT_PUBLIC_USE_BANUBA === "true";
-const MIN_FACE_RATIO = 0.35;
+const MIN_FACE_RATIO = 0.18;
+const MAX_FACE_TILT_DEG = 8;
 const CAMERA_PREF_KEY = "kids_photo_booth_camera";
 const PREFERRED_CAMERA_MATCH = [/logitech/i, /c920e/i, /c920/i, /insta360/i, /insta 360/i, /link/i, /virtual/i, /controller/i];
 let faceApiPromise = null;
@@ -19,6 +20,7 @@ async function loadFaceApi() {
   if (!faceApiPromise) {
     faceApiPromise = import("face-api.js").then(async (faceapi) => {
       await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
+      await faceapi.nets.faceLandmark68TinyNet.loadFromUri("/models");
       return faceapi;
     });
   }
@@ -96,35 +98,42 @@ export default function CaptureScreen() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     try {
-      let ratio = 0;
-      if (typeof window !== "undefined" && "FaceDetector" in window) {
-        const detector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
-        const faces = await detector.detect(canvas);
-        if (!faces || !faces.length) {
-          setDistanceMsg("Face was not detected. Please move into better lighting.");
-          return false;
-        }
-        const box = faces[0].boundingBox;
-        ratio = Math.max(box.width / canvas.width, box.height / canvas.height);
-      } else {
-        const faceapi = await loadFaceApi();
-        const detection = await faceapi.detectSingleFace(
+      const faceapi = await loadFaceApi();
+      const detection = await faceapi
+        .detectSingleFace(
           canvas,
           new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.4 })
-        );
-        if (!detection?.box) {
-          setDistanceMsg("Face was not detected. Please move into better lighting.");
-          return false;
-        }
-        ratio = Math.max(
-          detection.box.width / canvas.width,
-          detection.box.height / canvas.height
-        );
+        )
+        .withFaceLandmarks(true);
+
+      if (!detection?.detection?.box || !detection?.landmarks) {
+        setDistanceMsg("Face was not detected. Please move into better lighting.");
+        return false;
       }
+
+      const box = detection.detection.box;
+      const ratio = Math.max(box.width / canvas.width, box.height / canvas.height);
       if (ratio < MIN_FACE_RATIO) {
         setDistanceMsg("Kindly move slightly closer and then proceed with capturing the image.");
         return false;
       }
+
+      const leftEye = detection.landmarks.getLeftEye();
+      const rightEye = detection.landmarks.getRightEye();
+      if (leftEye.length && rightEye.length) {
+        const left = leftEye.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+        const right = rightEye.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+        const lx = left.x / leftEye.length;
+        const ly = left.y / leftEye.length;
+        const rx = right.x / rightEye.length;
+        const ry = right.y / rightEye.length;
+        const angleDeg = Math.atan2(ry - ly, rx - lx) * (180 / Math.PI);
+        if (Math.abs(angleDeg) > MAX_FACE_TILT_DEG) {
+          setDistanceMsg("Please keep your face straight.");
+          return false;
+        }
+      }
+
       setDistanceMsg("");
       return true;
     } catch (err) {

@@ -40,12 +40,25 @@ const DISPLAY_LAYOUT = {
 
 const FACE_FOREHEAD_RATIO = 0.26;
 const FACE_PAD_RATIO = 0.14;
+const USE_HOLE_FIT = false;
+const HOLE_FIT = {
+  migu: { scale: 1.04, offsetX: 0, offsetY: 0 },
+  teddy: { scale: 1.04, offsetX: 0, offsetY: 0 },
+  pipper: { scale: 1.04, offsetX: 0, offsetY: 0 },
+  liya: { scale: 1.04, offsetX: 0, offsetY: 0 },
+  default: { scale: 1.04, offsetX: 0, offsetY: 0 }
+};
 
 const faceCutoutCache = new Map();
 const faceCutoutInflight = new Map();
 const compositeCache = new Map();
+const holeBoundsCache = new Map();
 let faceApiPromise = null;
 let faceMeshPromise = null;
+const EYE_CROP_SCALE = 2.9;
+const EYE_CROP_OFFSET = 0.35;
+const BOX_CROP_OFFSET = 0.55;
+const TARGET_FACE_RATIO = 0.62;
 
 async function loadImage(src) {
   return new Promise((resolve, reject) => {
@@ -69,10 +82,10 @@ async function loadImageSafe(src, ms = 4000) {
 }
 
 const CHARACTER_FACE_CONFIG = {
-  migu: { cx: 41, cy: 40, size: 48, rot: -12, scaleX: 1.5, scaleY: 1.08 },
-  liya: { cx: 50, cy: 30, size: 44 },
-  teddy: { cx: 45, cy: 32, size: 85, scaleX: 1.35, scaleY: 1.12 },
-  pipper: { cx: 50, cy: 24, size: 70, scaleX: 1.40, scaleY: 1.20 },
+  migu: { cx: 42.4, cy: 42.2, size: 47, rot: -12, scaleX: 1.46, scaleY: 1.10 },
+  liya: { cx: 50, cy: 30, size: 42 },
+  teddy: { cx: 45.2, cy: 32.4, size: 80, scaleX: 1.34, scaleY: 1.14 },
+  pipper: { cx: 50.2, cy: 23.6, size: 68, scaleX: 1.44, scaleY: 1.18 },
   default: { cx: 50, cy: 22, size: 32 }
 };
 const FACE_TRIM = {
@@ -306,6 +319,59 @@ function cropCanvasToBounds(canvas, bounds, padRatio = 0.1) {
   return out;
 }
 
+function getEyeBasedCrop(img, landmarks) {
+  if (!landmarks) return null;
+  const leftEye = landmarks.getLeftEye?.() || [];
+  const rightEye = landmarks.getRightEye?.() || [];
+  if (!leftEye.length || !rightEye.length) return null;
+  const left = leftEye.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+  const right = rightEye.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+  const lx = left.x / leftEye.length;
+  const ly = left.y / leftEye.length;
+  const rx = right.x / rightEye.length;
+  const ry = right.y / rightEye.length;
+  const eyeDist = Math.hypot(rx - lx, ry - ly);
+  if (!eyeDist || !Number.isFinite(eyeDist)) return null;
+  const size = Math.max(1, eyeDist * EYE_CROP_SCALE);
+  const cx = (lx + rx) / 2;
+  const cy = (ly + ry) / 2 + eyeDist * EYE_CROP_OFFSET;
+  const sx = Math.max(0, Math.min(img.width - size, cx - size / 2));
+  const sy = Math.max(0, Math.min(img.height - size, cy - size / 2));
+  return { sx, sy, size };
+}
+
+function cropWithEllipse(img, crop) {
+  const out = document.createElement("canvas");
+  out.width = crop.size;
+  out.height = crop.size;
+  const ctx = out.getContext("2d");
+  ctx.drawImage(img, crop.sx, crop.sy, crop.size, crop.size, 0, 0, crop.size, crop.size);
+
+  const mask = document.createElement("canvas");
+  mask.width = out.width;
+  mask.height = out.height;
+  const mctx = mask.getContext("2d");
+  mctx.filter = "blur(4px)";
+  mctx.fillStyle = "#fff";
+  mctx.beginPath();
+  mctx.ellipse(out.width / 2, out.height / 2, out.width * 0.46, out.height * 0.58, 0, 0, Math.PI * 2);
+  mctx.fill();
+  ctx.globalCompositeOperation = "destination-in";
+  ctx.drawImage(mask, 0, 0);
+  return out;
+}
+
+function getBoxBasedCrop(img, box) {
+  if (!box) return null;
+  const faceSize = Math.max(1, Math.max(box.width, box.height));
+  const size = Math.max(1, faceSize / TARGET_FACE_RATIO);
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height * BOX_CROP_OFFSET;
+  const sx = Math.max(0, Math.min(img.width - size, cx - size / 2));
+  const sy = Math.max(0, Math.min(img.height - size, cy - size / 2));
+  return { sx, sy, size };
+}
+
 function buildFacePolygon(landmarks) {
   const jaw = landmarks.getJawOutline();
   const leftBrow = landmarks.getLeftEyeBrow();
@@ -480,7 +546,20 @@ async function createFaceCutout(img, faceSrc, characterId) {
     }
 
     const detection = await withTimeout(detectLandmarks(sample), 1800, null);
-    if (detection?.landmarks) {
+    if (detection?.landmarks || detection?.detection?.box) {
+      const box = detection?.detection?.box || null;
+      const boxCrop = getBoxBasedCrop(sample, box);
+      if (boxCrop) {
+        const cropped = cropWithEllipse(sample, boxCrop);
+        const trimmed = applyTrim(cropped, characterId);
+        return { image: trimmed, size: trimmed.width };
+      }
+      const eyeCrop = getEyeBasedCrop(sample, detection.landmarks);
+      if (eyeCrop) {
+        const cropped = cropWithEllipse(sample, eyeCrop);
+        const trimmed = applyTrim(cropped, characterId);
+        return { image: trimmed, size: trimmed.width };
+      }
       const { polygon, bounds } = buildFacePolygon(detection.landmarks);
       const masked = maskImageWithPolygon(sample, polygon);
       const tightened = cropCanvasToBounds(masked, bounds, FACE_PAD_RATIO);
@@ -490,6 +569,13 @@ async function createFaceCutout(img, faceSrc, characterId) {
 
     const box = await withTimeout(detectFaceBox(sample), 1200, null);
     if (!box) return fallback;
+
+    const boxCrop = getBoxBasedCrop(sample, box);
+    if (boxCrop) {
+      const cropped = cropWithEllipse(sample, boxCrop);
+      const trimmed = applyTrim(cropped, characterId);
+      return { image: trimmed, size: trimmed.width };
+    }
 
     const crop = getCropFromBox(sample, box);
     const cropCanvas = document.createElement("canvas");
@@ -596,8 +682,18 @@ function findHoleBounds(characterImg) {
   };
 }
 
+function getHoleBounds(characterImg) {
+  if (!characterImg) return null;
+  const key = characterImg.src || `${characterImg.width}x${characterImg.height}`;
+  if (holeBoundsCache.has(key)) return holeBoundsCache.get(key);
+  const bounds = findHoleBounds(characterImg);
+  holeBoundsCache.set(key, bounds);
+  return bounds;
+}
+
 function renderComposite(characterImg, faceCutout, characterId) {
   const cfg = CHARACTER_FACE_CONFIG[characterId] || CHARACTER_FACE_CONFIG.default;
+  const holeCfg = HOLE_FIT[characterId] || HOLE_FIT.default;
   const rotation = (cfg.rot || 0) * (Math.PI / 180);
 
   const canvas = document.createElement("canvas");
@@ -605,19 +701,46 @@ function renderComposite(characterImg, faceCutout, characterId) {
   canvas.height = characterImg.height;
   const ctx = canvas.getContext("2d");
 
-  // --- FACE POSITION ---
-  const size = (cfg.size / 100) * canvas.width;
-  const cx = (cfg.cx / 100) * canvas.width;
-  const cy = (cfg.cy / 100) * canvas.height;
-  const drawW = size * (cfg.scaleX || 1);
-  const drawH = size * (cfg.scaleY || 1);
-  const x = cx - drawW / 2;
-  const y = cy - drawH / 2;
+  const holeBounds = USE_HOLE_FIT ? getHoleBounds(characterImg) : null;
+  let cx = 0;
+  let cy = 0;
+  let drawW = 0;
+  let drawH = 0;
+  let clipRx = 0;
+  let clipRy = 0;
+
+  if (holeBounds) {
+    const scale = holeCfg.scale ?? 1.04;
+    const offsetX = (holeCfg.offsetX || 0) * holeBounds.width;
+    const offsetY = (holeCfg.offsetY || 0) * holeBounds.height;
+    const targetW = holeBounds.width * scale;
+    const targetH = holeBounds.height * scale;
+    const faceScale = Math.max(targetW / faceCutout.width, targetH / faceCutout.height);
+    drawW = faceCutout.width * faceScale;
+    drawH = faceCutout.height * faceScale;
+    cx = holeBounds.x + holeBounds.width / 2 + offsetX;
+    cy = holeBounds.y + holeBounds.height / 2 + offsetY;
+    clipRx = holeBounds.width / 2;
+    clipRy = holeBounds.height / 2;
+  } else {
+    const size = (cfg.size / 100) * canvas.width;
+    cx = (cfg.cx / 100) * canvas.width;
+    cy = (cfg.cy / 100) * canvas.height;
+    drawW = size * (cfg.scaleX || 1);
+    drawH = size * (cfg.scaleY || 1);
+    clipRx = size / 2;
+    clipRy = size / 2;
+  }
+
+  const shadowX = cx - clipRx;
+  const shadowY = cy - clipRy;
+  const shadowW = clipRx * 2;
+  const shadowH = clipRy * 2;
 
   // --- DRAW FACE ---
   ctx.save();
   ctx.beginPath();
-  ctx.ellipse(cx, cy, size / 2, size / 2, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy, clipRx, clipRy, 0, 0, Math.PI * 2);
   ctx.clip();
 
   enhanceFace(ctx);
@@ -628,7 +751,7 @@ function renderComposite(characterImg, faceCutout, characterId) {
   ctx.translate(-cx, -cy);
 
   ctx.globalCompositeOperation = "multiply";
-  drawInnerShadow(ctx, x, y, drawW, drawH);
+  drawInnerShadow(ctx, shadowX, shadowY, shadowW, shadowH);
   ctx.globalCompositeOperation = "source-over";
 
   ctx.restore();
