@@ -18,15 +18,14 @@ export default function StartScreen() {
 
   const valid = useMemo(() => {
     if (!form.email.trim()) return false;
-    // only gmail allowed
-    if (!/^[^\s@]+@gmail\.com$/i.test(form.email.trim())) return false;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return false;
     if (!/^\d{11}$/.test(String(form.phone).trim())) return false;
     return true;
   }, [form]);
 
   const onNext = () => {
     if (!valid) {
-      setError("Only Gmail addresses are allowed, and phone must be 11 digits.");
+      setError("Please enter a valid email and an 11-digit phone number.");
       return;
     }
     setError("");
@@ -38,16 +37,6 @@ export default function StartScreen() {
 
   return (
     <div className="min-h-screen w-full bg-[#f6c11e] flex items-center justify-center px-4 py-6 kids-font">
-      <style jsx global>{`
-        input::-webkit-credentials-auto-fill-button,
-        input::-webkit-contacts-auto-fill-button {
-          visibility: hidden;
-          display: none !important;
-          pointer-events: none;
-          position: absolute;
-          right: 0;
-        }
-      `}</style>
       <div className="relative w-full max-w-[735px] aspect-[9/16] overflow-hidden rounded-[32px] shadow-2xl">
         <div className="absolute inset-0 bg-[#f6c11e]" />
 
@@ -121,8 +110,8 @@ export default function StartScreen() {
                   className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#a424c7] placeholder:text-[#2d2bb8]/70 outline-none"
                   style={{ height: "clamp(26px, 4.3vw, 38px)" }}
                   value={form.email}
-                  placeholder="yourname"
-                  autoComplete="new-password"
+                  placeholder="yourname@example.com"
+                  autoComplete="email"
                   name="email-field"
                   id="email-field"
                   autoCorrect="off"
@@ -130,9 +119,7 @@ export default function StartScreen() {
                   spellCheck={false}
                   onChange={(e) => {
                     setError("");
-                    const raw = e.target.value.replace(/\s/g, "");
-                    const local = raw.split("@")[0];
-                    setForm((s) => ({ ...s, email: local ? `${local}@gmail.com` : "" }));
+                    setForm((s) => ({ ...s, email: e.target.value }));
                   }}
                   onFocus={() => setError("")}
                 />
