@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useBooth } from "../../context/BoothContext";
 
 const BG_URL = "/assets/Your%20Creation/Your-Creation-BG.jpg";
-const PRINT_BG_URL = "/assets/Print%20Screen/Print-Screen.jpg.jpeg";
+const PRINT_HEADER_BG_URL = "/assets/Start%20Screen/Layer-Top-Print.jpg";
+const PRINT_FOOTER_BG_URL = "/assets/Start%20Screen/Layer-Bottom-Print.jpg";
 const IMG = {
   character: "/assets/Your%20Creation/Character.png",
   print: "/assets/Your%20Creation/3.png",
@@ -21,6 +22,11 @@ const LABELS = {
   teddy: "/assets/Your%20Creation/TEDDY.png",
   pipper: "/assets/Your%20Creation/PIPER.png"
 };
+const CHARACTER_NAMES = {
+  migu: "MIGU",
+  teddy: "GLUCO TEDDY",
+  pipper: "PIED PIPER"
+};
 const CARD_THEME = {
   migu: { bg: "linear-gradient(180deg, #1d72ff 0%, #0f53cc 100%)" },
   teddy: { bg: "linear-gradient(180deg, #f1943b 0%, #c86a1d 100%)" },
@@ -30,16 +36,53 @@ const CARD_THEME = {
 const UI_CARD_IMAGE = {
   migu: { top: 28, width: 84 },
   teddy: { top: 30, width: 76 },
-  pipper: { top: 34, width: 50 },
+  pipper: { top: 40, width: 56 },
   default: { top: 28, width: 84 }
 };
-const PRINT_CARD_IMAGE = {
-  migu: { top: 28, width: 84 },
-  teddy: { top: 30, width: 76 },
-  pipper: { top: 32, width: 72 },
-  default: { top: 28, width: 84 }
+const PRINT_CHARACTER_LAYOUT = {
+  migu: { top: 0.21, width: 0.88, height: 0.68, zoom: 1.22, yShift: 0 },
+  teddy: { top: 0.23, width: 0.78, height: 0.66, zoom: 1.16, yShift: 0.005 },
+  pipper: { top: 0.23, width: 0.72, height: 0.66, zoom: 1.15, yShift: 0.005 },
+  default: { top: 0.21, width: 0.88, height: 0.68, zoom: 1.2, yShift: 0 }
 };
 const STORAGE_KEY = "kids_photo_booth_v1";
+
+function ordinalSuffix(day) {
+  const mod10 = day % 10;
+  const mod100 = day % 100;
+  if (mod10 === 1 && mod100 !== 11) return "st";
+  if (mod10 === 2 && mod100 !== 12) return "nd";
+  if (mod10 === 3 && mod100 !== 13) return "rd";
+  return "th";
+}
+
+function formatPrintDate(date = new Date()) {
+  const day = date.getDate();
+  const suffix = ordinalSuffix(day);
+  const month = date.toLocaleString("en-US", { month: "long" }).toUpperCase();
+  const year = date.getFullYear();
+  return `${day}${suffix} - ${month} - ${year}`;
+}
+
+function drawCover(ctx, img, x, y, width, height, options = {}) {
+  const { alignX = 0.5, alignY = 0.5 } = options;
+  const scale = Math.max(width / img.width, height / img.height);
+  const drawW = img.width * scale;
+  const drawH = img.height * scale;
+  const dx = x - (drawW - width) * alignX;
+  const dy = y - (drawH - height) * alignY;
+  ctx.drawImage(img, dx, dy, drawW, drawH);
+}
+
+function fitText(ctx, text, maxWidth, maxSize, minSize, fontFamily, weight = 900) {
+  let size = maxSize;
+  while (size >= minSize) {
+    ctx.font = `${weight} ${size}px ${fontFamily}`;
+    if (ctx.measureText(text).width <= maxWidth) return size;
+    size -= 2;
+  }
+  return minSize;
+}
 
 export default function YourCreationScreen() {
   const router = useRouter();
@@ -136,191 +179,112 @@ export default function YourCreationScreen() {
     });
 
   const composePrintImage = async (dataUrl, selectedId) => {
-    const [bgImg, photoImg, shapeImg, labelImgObj] = await Promise.all([
-      loadImage(PRINT_BG_URL),
+    const [headerBgImg, footerBgImg, photoImg, shapeImg, labelImgObj] = await Promise.all([
+      loadImage(PRINT_HEADER_BG_URL),
+      loadImage(PRINT_FOOTER_BG_URL),
       loadImage(dataUrl),
       loadImage(IMG.labelShape),
       loadImage(LABELS[selectedId] || LABELS.migu)
     ]);
     const canvas = document.createElement("canvas");
-    canvas.width = bgImg.width;
-    canvas.height = bgImg.height;
+    canvas.width = 1200;
+    canvas.height = 1800;
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+    const headerH = Math.round(canvas.width * (headerBgImg.height / headerBgImg.width));
+    const footerH = Math.round(canvas.height * 0.19);
+    const middleY = headerH;
+    const middleH = canvas.height - headerH - footerH;
+    const centerX = canvas.width / 2;
 
-    const detectFrame = () => {
-      const search = {
-        x: Math.round(canvas.width * 0.04),
-        y: Math.round(canvas.height * 0.18),
-        w: Math.round(canvas.width * 0.6),
-        h: Math.round(canvas.height * 0.45)
-      };
-      const data = ctx.getImageData(search.x, search.y, search.w, search.h).data;
-      let minX = search.w;
-      let minY = search.h;
-      let maxX = 0;
-      let maxY = 0;
-      let found = false;
-      for (let y = 0; y < search.h; y++) {
-        for (let x = 0; x < search.w; x++) {
-          const idx = (y * search.w + x) * 4;
-          const r = data[idx];
-          const g = data[idx + 1];
-          const b = data[idx + 2];
-          const a = data[idx + 3];
-          if (r > 240 && g > 240 && b > 240 && a > 200) {
-            found = true;
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
-          }
-        }
-      }
-      if (!found) {
-        return {
-          x: Math.round(canvas.width * 0.0658),
-          y: Math.round(canvas.height * 0.2444),
-          w: Math.round(canvas.width * 0.509),
-          h: Math.round(canvas.height * 0.3317)
-        };
-      }
-      return {
-        x: search.x + minX,
-        y: search.y + minY,
-        w: Math.max(1, maxX - minX + 1),
-        h: Math.max(1, maxY - minY + 1)
-      };
-    };
+    // Keep top strip fully visible without cutting.
+    ctx.drawImage(headerBgImg, 0, 0, canvas.width, headerH);
+    drawCover(ctx, footerBgImg, 0, canvas.height - footerH, canvas.width, footerH, { alignY: 1 });
 
-    const detectInner = (frame) => {
-      const data = ctx.getImageData(frame.x, frame.y, frame.w, frame.h).data;
-      let minX = frame.w;
-      let minY = frame.h;
-      let maxX = 0;
-      let maxY = 0;
-      let found = false;
-      for (let y = 0; y < frame.h; y++) {
-        for (let x = 0; x < frame.w; x++) {
-          const idx = (y * frame.w + x) * 4;
-          const r = data[idx];
-          const g = data[idx + 1];
-          const b = data[idx + 2];
-          const a = data[idx + 3];
-          if (r > 200 && g > 150 && b < 120 && a > 200) {
-            found = true;
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
-          }
-        }
-      }
-      if (!found) {
-        return {
-          x: frame.x + frame.w * 0.1,
-          y: frame.y + frame.h * 0.18,
-          w: frame.w * 0.8,
-          h: frame.h * 0.62
-        };
-      }
-      return {
-        x: frame.x + minX,
-        y: frame.y + minY,
-        w: Math.max(1, maxX - minX + 1),
-        h: Math.max(1, maxY - minY + 1)
-      };
-    };
+    const middleGrad = ctx.createLinearGradient(0, middleY, 0, middleY + middleH);
+    middleGrad.addColorStop(0, "#1f78ff");
+    middleGrad.addColorStop(1, "#0f59dc");
+    ctx.fillStyle = middleGrad;
+    // Slight overlap removes any visible seam between header and body.
+    ctx.fillRect(0, middleY - 1, canvas.width, middleH + 2);
 
-    const frame = detectFrame();
-    const inner = detectInner(frame);
-    const cx = frame.x + frame.w / 2;
-    const cy = frame.y + frame.h / 2;
-    const angle = (-6.5 * Math.PI) / 180;
-    const offsetX = inner.x + inner.w / 2 - cx - frame.w * 0.015;
-    const offsetY = inner.y + inner.h / 2 - cy;
-    const scale = 0.9;
+    const glow = ctx.createRadialGradient(
+      centerX,
+      middleY + middleH * 0.42,
+      10,
+      centerX,
+      middleY + middleH * 0.42,
+      canvas.width * 0.52
+    );
+    glow.addColorStop(0, "rgba(255,255,255,0.22)");
+    glow.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, middleY, canvas.width, middleH);
 
-    const drawRoundedRect = (c, x, y, w, h, r) => {
-      const radius = Math.min(r, w / 2, h / 2);
-      c.beginPath();
-      c.moveTo(x + radius, y);
-      c.lineTo(x + w - radius, y);
-      c.quadraticCurveTo(x + w, y, x + w, y + radius);
-      c.lineTo(x + w, y + h - radius);
-      c.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-      c.lineTo(x + radius, y + h);
-      c.quadraticCurveTo(x, y + h, x, y + h - radius);
-      c.lineTo(x, y + radius);
-      c.quadraticCurveTo(x, y, x + radius, y);
-      c.closePath();
-    };
-
-    const card = document.createElement("canvas");
-    card.width = Math.round(inner.w);
-    card.height = Math.round(inner.h);
-    const cctx = card.getContext("2d");
-    const theme = CARD_THEME[selectedId] || CARD_THEME.default;
-    const borderSize = Math.max(6, Math.round(card.width * 0.035));
-    const radius = Math.round(card.width * 0.08);
-    const grad = cctx.createLinearGradient(0, 0, 0, card.height);
-    if (theme.bg.includes("#f1")) {
-      grad.addColorStop(0, "#ffd25a");
-      grad.addColorStop(1, "#f1a52b");
-    } else if (theme.bg.includes("#f1") || theme.bg.includes("#c8")) {
-      grad.addColorStop(0, "#f1943b");
-      grad.addColorStop(1, "#c86a1d");
-    } else {
-      grad.addColorStop(0, "#1d72ff");
-      grad.addColorStop(1, "#0f53cc");
-    }
-    drawRoundedRect(cctx, 0, 0, card.width, card.height, radius);
-    cctx.fillStyle = grad;
-    cctx.fill();
-    cctx.lineWidth = borderSize;
-    cctx.strokeStyle = "#7b33ff";
-    cctx.stroke();
-
-    const shapeW = card.width * 0.6;
+    const shapeW = canvas.width * 0.62;
     const shapeH = (shapeImg.height / shapeImg.width) * shapeW;
-    const shapeX = (card.width - shapeW) / 2;
-    const shapeY = card.height * 0.06;
-    cctx.drawImage(shapeImg, shapeX, shapeY, shapeW, shapeH);
+    const shapeX = centerX - shapeW / 2;
+    const shapeY = middleY + middleH * 0.09;
+    ctx.drawImage(shapeImg, shapeX, shapeY, shapeW, shapeH);
 
-    const labelW = shapeW * 0.66;
+    const labelW = shapeW * 0.7;
     const labelH = (labelImgObj.height / labelImgObj.width) * labelW;
-    const labelX = (card.width - labelW) / 2;
-    const labelY = shapeY + shapeH * 0.18;
-    cctx.drawImage(labelImgObj, labelX, labelY, labelW, labelH);
+    const labelX = centerX - labelW / 2;
+    const labelY = shapeY + shapeH * 0.2;
+    ctx.drawImage(labelImgObj, labelX, labelY, labelW, labelH);
 
-    const cardImage = PRINT_CARD_IMAGE[selectedId] || PRINT_CARD_IMAGE.default;
-    const charBoxTop = card.height * (cardImage.top / 100);
-    const charBoxH = card.height * 0.86 - charBoxTop;
-    const charBoxW = card.width * (cardImage.width / 100);
-    const scaleChar = Math.min(
-      charBoxW / photoImg.width,
-      charBoxH / photoImg.height
-    );
-    const charW = photoImg.width * scaleChar;
-    const charH = photoImg.height * scaleChar;
-    const charX = (card.width - charW) / 2;
-    const charY = charBoxTop + (charBoxH - charH) / 2;
-    cctx.drawImage(photoImg, charX, charY, charW, charH);
-
+    const charLayout = PRINT_CHARACTER_LAYOUT[selectedId] || PRINT_CHARACTER_LAYOUT.default;
+    const charAreaY = middleY + middleH * charLayout.top;
+    const charAreaH = middleH * charLayout.height;
+    const charAreaW = canvas.width * charLayout.width;
+    const baseScale = Math.min(charAreaW / photoImg.width, charAreaH / photoImg.height);
+    const zoom = charLayout.zoom || 1;
+    const charScale = baseScale * zoom;
+    const charW = photoImg.width * charScale;
+    const charH = photoImg.height * charScale;
+    const charX = centerX - charW / 2;
+    const charY = charAreaY + (charAreaH - charH) / 2 + middleH * (charLayout.yShift || 0);
     ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
     ctx.beginPath();
-    ctx.rect(-frame.w / 2, -frame.h / 2, frame.w, frame.h);
+    ctx.rect(0, middleY, canvas.width, middleH);
     ctx.clip();
-    ctx.drawImage(
-      card,
-      -inner.w * scale / 2 + offsetX,
-      -inner.h * scale / 2 + offsetY,
-      inner.w * scale,
-      inner.h * scale
-    );
+    ctx.drawImage(photoImg, charX, charY, charW, charH);
     ctx.restore();
+
+    const footerY = canvas.height - footerH;
+    ctx.fillStyle = "rgba(255, 206, 41, 0.46)";
+    ctx.fillRect(0, footerY, canvas.width, footerH);
+
+    const displayName = String(state.user?.name || "").trim().toUpperCase() || "YOUNG PIPER";
+    const dateText = formatPrintDate();
+    const titleFamily = "\"Baloo 2\", \"Arial Black\", sans-serif";
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const dateSize = fitText(ctx, dateText, canvas.width * 0.76, 52, 28, titleFamily, 800);
+    ctx.font = `800 ${dateSize}px ${titleFamily}`;
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#ffffff";
+    ctx.fillStyle = "#5b26cf";
+    ctx.strokeText(dateText, centerX, footerY + footerH * 0.18);
+    ctx.fillText(dateText, centerX, footerY + footerH * 0.18);
+
+    const nameSize = fitText(ctx, displayName, canvas.width * 0.88, 108, 46, titleFamily, 900);
+    ctx.font = `900 ${nameSize}px ${titleFamily}`;
+    ctx.lineWidth = Math.max(8, Math.round(nameSize * 0.12));
+    ctx.strokeStyle = "#ffd52a";
+    ctx.fillStyle = "#ef2f2f";
+    ctx.strokeText(displayName, centerX, footerY + footerH * 0.53);
+    ctx.fillText(displayName, centerX, footerY + footerH * 0.53);
+
+    const subline = `WITH LOVE ${CHARACTER_NAMES[selectedId] || "PIED PIPER"}`;
+    const sublineSize = fitText(ctx, subline, canvas.width * 0.6, 48, 24, titleFamily, 800);
+    ctx.font = `800 ${sublineSize}px ${titleFamily}`;
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#ffffff";
+    ctx.fillStyle = "#7a1acb";
+    ctx.strokeText(subline, centerX, footerY + footerH * 0.82);
+    ctx.fillText(subline, centerX, footerY + footerH * 0.82);
 
     return canvas.toDataURL("image/png");
   };

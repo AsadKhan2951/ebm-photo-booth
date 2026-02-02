@@ -7,12 +7,12 @@ const BoothContext = createContext(null);
 const STORAGE_KEY = "kids_photo_booth_v1";
 
 const emptyState = {
-  user: { name: "", age: "", email: "", phone: "" },
+  user: { name: "", age: "", gender: "", email: "", phone: "" },
   character: null, // {id,name}
   shots: [], // dataURLs
   selectedIndex: null,
   enhanced: null, // dataURL (mock)
-  composite: null // dataURL (face + character)
+  composite: null // final character image path/dataURL
 };
 
 export function BoothProvider({ children }) {

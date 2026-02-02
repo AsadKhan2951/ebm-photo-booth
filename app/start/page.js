@@ -13,10 +13,17 @@ const IMG = {
 export default function StartScreen() {
   const router = useRouter();
   const { state, setUser, resetAll } = useBooth();
-  const [form, setForm] = useState(state.user);
+  const [form, setForm] = useState({
+    name: state.user?.name || "",
+    age: state.user?.age || "",
+    gender: state.user?.gender || "",
+    email: state.user?.email || "",
+    phone: state.user?.phone || ""
+  });
   const [error, setError] = useState("");
 
   const valid = useMemo(() => {
+    if (!form.gender) return false;
     if (!form.email.trim()) return false;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return false;
     if (!/^\d{11}$/.test(String(form.phone).trim())) return false;
@@ -25,7 +32,7 @@ export default function StartScreen() {
 
   const onNext = () => {
     if (!valid) {
-      setError("Please enter a valid email and an 11-digit phone number.");
+      setError("Please select gender, and enter a valid email + 11-digit phone number.");
       return;
     }
     setError("");
@@ -123,6 +130,26 @@ export default function StartScreen() {
                   }}
                   onFocus={() => setError("")}
                 />
+              </label>
+
+              <label className="text-[#a424c7] font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
+                GENDER
+                <select
+                  className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#a424c7] outline-none"
+                  style={{ height: "clamp(26px, 4.3vw, 38px)" }}
+                  value={form.gender}
+                  name="gender-field"
+                  id="gender-field"
+                  onChange={(e) => {
+                    setError("");
+                    setForm((s) => ({ ...s, gender: e.target.value }));
+                  }}
+                  onFocus={() => setError("")}
+                >
+                  <option value="">Select gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
               </label>
 
               <label className="text-[#a424c7] font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
