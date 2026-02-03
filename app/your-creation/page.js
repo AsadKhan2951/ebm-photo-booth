@@ -15,7 +15,8 @@ const IMG = {
   heartLeft: "/assets/Your%20Creation/Heart-Left.png",
   heartRight: "/assets/Your%20Creation/Heart-Right.png",
   star: "/assets/Your%20Creation/Star.png",
-  labelShape: "/assets/Your%20Creation/shape.png"
+  labelShape: "/assets/Your%20Creation/shape.png",
+  arrow: "/assets/Start%20Screen/Arrow.png"
 };
 const LABELS = {
   migu: "/assets/Your%20Creation/MIGU.png",
@@ -40,10 +41,21 @@ const UI_CARD_IMAGE = {
   default: { top: 28, width: 84 }
 };
 const PRINT_CHARACTER_LAYOUT = {
-  migu: { top: 0.21, width: 0.88, height: 0.68, zoom: 1.22, yShift: 0 },
-  teddy: { top: 0.23, width: 0.78, height: 0.66, zoom: 1.16, yShift: 0.005 },
-  pipper: { top: 0.23, width: 0.72, height: 0.66, zoom: 1.15, yShift: 0.005 },
-  default: { top: 0.21, width: 0.88, height: 0.68, zoom: 1.2, yShift: 0 }
+  migu: { top: 0.26, width: 0.86, height: 0.62, zoom: 1.1, yShift: 0.07, labelClearance: 1.02 },
+  teddy: { top: 0.25, width: 0.8, height: 0.62, zoom: 1.08, yShift: 0.055, labelClearance: 0.86 },
+  pipper: { top: 0.245, width: 0.78, height: 0.62, zoom: 1.02, yShift: 0.02, labelClearance: 0.8 },
+  default: { top: 0.26, width: 0.84, height: 0.62, zoom: 1.08, yShift: 0.07, labelClearance: 1.02 }
+};
+const PRINT_LABEL_LAYOUT = {
+  migu: { width: 0.56, y: 0.18 },
+  teddy: { width: 0.5, y: 0.17 },
+  pipper: { width: 0.5, y: 0.17 },
+  default: { width: 0.52, y: 0.17 }
+};
+const PRINT_SHAPE_LAYOUT = {
+  width: 0.55,
+  heightScale: 0.68,
+  y: 0.075
 };
 const STORAGE_KEY = "kids_photo_booth_v1";
 
@@ -82,6 +94,52 @@ function fitText(ctx, text, maxWidth, maxSize, minSize, fontFamily, weight = 900
     size -= 2;
   }
   return minSize;
+}
+
+function getOpaqueBounds(img) {
+  const probe = document.createElement("canvas");
+  probe.width = img.width;
+  probe.height = img.height;
+  const pctx = probe.getContext("2d");
+  pctx.drawImage(img, 0, 0);
+  const data = pctx.getImageData(0, 0, probe.width, probe.height).data;
+
+  let minX = probe.width;
+  let minY = probe.height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < probe.height; y += 1) {
+    for (let x = 0; x < probe.width; x += 1) {
+      const a = data[(y * probe.width + x) * 4 + 3];
+      if (a <= 10) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+
+  if (maxX < 0 || maxY < 0) {
+    return { x: 0, y: 0, width: img.width, height: img.height };
+  }
+  return {
+    x: minX,
+    y: minY,
+    width: Math.max(1, maxX - minX + 1),
+    height: Math.max(1, maxY - minY + 1)
+  };
+}
+
+async function ensurePrintFonts() {
+  if (typeof document === "undefined" || !document.fonts?.load) return;
+  try {
+    await Promise.all([
+      document.fonts.load('900 64px "Baloo 2"'),
+      document.fonts.load('800 44px "Baloo 2"'),
+      document.fonts.ready
+    ]);
+  } catch {}
 }
 
 export default function YourCreationScreen() {
@@ -179,12 +237,15 @@ export default function YourCreationScreen() {
     });
 
   const composePrintImage = async (dataUrl, selectedId) => {
-    const [headerBgImg, footerBgImg, photoImg, shapeImg, labelImgObj] = await Promise.all([
+    await ensurePrintFonts();
+    const [headerBgImg, footerBgImg, photoImg, shapeImg, labelImgObj, arrowImg, starImg] = await Promise.all([
       loadImage(PRINT_HEADER_BG_URL),
       loadImage(PRINT_FOOTER_BG_URL),
       loadImage(dataUrl),
       loadImage(IMG.labelShape),
-      loadImage(LABELS[selectedId] || LABELS.migu)
+      loadImage(LABELS[selectedId] || LABELS.migu),
+      loadImage(IMG.arrow),
+      loadImage(IMG.star)
     ]);
     const canvas = document.createElement("canvas");
     canvas.width = 1200;
@@ -198,7 +259,7 @@ export default function YourCreationScreen() {
 
     // Keep top strip fully visible without cutting.
     ctx.drawImage(headerBgImg, 0, 0, canvas.width, headerH);
-    drawCover(ctx, footerBgImg, 0, canvas.height - footerH, canvas.width, footerH, { alignY: 1 });
+    drawCover(ctx, footerBgImg, 0, canvas.height - footerH, canvas.width, footerH, { alignY: 0 });
 
     const middleGrad = ctx.createLinearGradient(0, middleY, 0, middleY + middleH);
     middleGrad.addColorStop(0, "#1f78ff");
@@ -220,39 +281,41 @@ export default function YourCreationScreen() {
     ctx.fillStyle = glow;
     ctx.fillRect(0, middleY, canvas.width, middleH);
 
-    const shapeW = canvas.width * 0.62;
-    const shapeH = (shapeImg.height / shapeImg.width) * shapeW;
+    const shapeW = canvas.width * PRINT_SHAPE_LAYOUT.width;
+    const shapeH = (shapeImg.height / shapeImg.width) * shapeW * PRINT_SHAPE_LAYOUT.heightScale;
     const shapeX = centerX - shapeW / 2;
-    const shapeY = middleY + middleH * 0.09;
+    const shapeY = middleY + middleH * PRINT_SHAPE_LAYOUT.y;
     ctx.drawImage(shapeImg, shapeX, shapeY, shapeW, shapeH);
 
-    const labelW = shapeW * 0.7;
+    const labelLayout = PRINT_LABEL_LAYOUT[selectedId] || PRINT_LABEL_LAYOUT.default;
+    const labelW = shapeW * labelLayout.width;
     const labelH = (labelImgObj.height / labelImgObj.width) * labelW;
     const labelX = centerX - labelW / 2;
-    const labelY = shapeY + shapeH * 0.2;
+    const labelY = shapeY + shapeH * labelLayout.y;
     ctx.drawImage(labelImgObj, labelX, labelY, labelW, labelH);
 
     const charLayout = PRINT_CHARACTER_LAYOUT[selectedId] || PRINT_CHARACTER_LAYOUT.default;
+    const opaque = getOpaqueBounds(photoImg);
     const charAreaY = middleY + middleH * charLayout.top;
     const charAreaH = middleH * charLayout.height;
     const charAreaW = canvas.width * charLayout.width;
-    const baseScale = Math.min(charAreaW / photoImg.width, charAreaH / photoImg.height);
+    const baseScale = Math.min(charAreaW / opaque.width, charAreaH / opaque.height);
     const zoom = charLayout.zoom || 1;
     const charScale = baseScale * zoom;
-    const charW = photoImg.width * charScale;
-    const charH = photoImg.height * charScale;
+    const charW = opaque.width * charScale;
+    const charH = opaque.height * charScale;
     const charX = centerX - charW / 2;
-    const charY = charAreaY + (charAreaH - charH) / 2 + middleH * (charLayout.yShift || 0);
+    const charYRaw = charAreaY + (charAreaH - charH) / 2 + middleH * (charLayout.yShift || 0);
+    const minCharY = labelY + labelH * (charLayout.labelClearance || 1.02);
+    const charY = Math.max(charYRaw, minCharY);
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, middleY, canvas.width, middleH);
     ctx.clip();
-    ctx.drawImage(photoImg, charX, charY, charW, charH);
+    ctx.drawImage(photoImg, opaque.x, opaque.y, opaque.width, opaque.height, charX, charY, charW, charH);
     ctx.restore();
 
     const footerY = canvas.height - footerH;
-    ctx.fillStyle = "rgba(255, 206, 41, 0.46)";
-    ctx.fillRect(0, footerY, canvas.width, footerH);
 
     const displayName = String(state.user?.name || "").trim().toUpperCase() || "YOUNG PIPER";
     const dateText = formatPrintDate();
@@ -261,30 +324,42 @@ export default function YourCreationScreen() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    const dateSize = fitText(ctx, dateText, canvas.width * 0.76, 52, 28, titleFamily, 800);
+    const dateSize = fitText(ctx, dateText, canvas.width * 0.72, 52, 28, titleFamily, 800);
     ctx.font = `800 ${dateSize}px ${titleFamily}`;
     ctx.lineWidth = 6;
     ctx.strokeStyle = "#ffffff";
     ctx.fillStyle = "#5b26cf";
-    ctx.strokeText(dateText, centerX, footerY + footerH * 0.18);
-    ctx.fillText(dateText, centerX, footerY + footerH * 0.18);
+    ctx.strokeText(dateText, centerX, footerY + footerH * 0.22);
+    ctx.fillText(dateText, centerX, footerY + footerH * 0.22);
 
-    const nameSize = fitText(ctx, displayName, canvas.width * 0.88, 108, 46, titleFamily, 900);
+    const nameSize = fitText(ctx, displayName, canvas.width * 0.8, 120, 54, titleFamily, 900);
     ctx.font = `900 ${nameSize}px ${titleFamily}`;
-    ctx.lineWidth = Math.max(8, Math.round(nameSize * 0.12));
+    ctx.lineWidth = Math.max(5, Math.round(nameSize * 0.075));
     ctx.strokeStyle = "#ffd52a";
     ctx.fillStyle = "#ef2f2f";
-    ctx.strokeText(displayName, centerX, footerY + footerH * 0.53);
-    ctx.fillText(displayName, centerX, footerY + footerH * 0.53);
+    ctx.strokeText(displayName, centerX, footerY + footerH * 0.58);
+    ctx.fillText(displayName, centerX, footerY + footerH * 0.58);
 
     const subline = `WITH LOVE ${CHARACTER_NAMES[selectedId] || "PIED PIPER"}`;
-    const sublineSize = fitText(ctx, subline, canvas.width * 0.6, 48, 24, titleFamily, 800);
+    const sublineSize = fitText(ctx, subline, canvas.width * 0.66, 50, 24, titleFamily, 800);
     ctx.font = `800 ${sublineSize}px ${titleFamily}`;
     ctx.lineWidth = 4;
     ctx.strokeStyle = "#ffffff";
     ctx.fillStyle = "#7a1acb";
-    ctx.strokeText(subline, centerX, footerY + footerH * 0.82);
-    ctx.fillText(subline, centerX, footerY + footerH * 0.82);
+    ctx.strokeText(subline, centerX, footerY + footerH * 0.86);
+    ctx.fillText(subline, centerX, footerY + footerH * 0.86);
+
+    const arrowW = canvas.width * 0.09;
+    const arrowH = (arrowImg.height / arrowImg.width) * arrowW;
+    ctx.drawImage(arrowImg, canvas.width * 0.08, footerY + footerH * 0.34, arrowW, arrowH);
+
+    const starW = canvas.width * 0.08;
+    const starH = (starImg.height / starImg.width) * starW;
+    ctx.drawImage(starImg, canvas.width * 0.78, footerY + footerH * 0.64, starW, starH);
+
+    ctx.font = `900 ${Math.round(footerH * 0.22)}px ${titleFamily}`;
+    ctx.fillStyle = "#d011b1";
+    ctx.fillText("♪", canvas.width * 0.83, footerY + footerH * 0.24);
 
     return canvas.toDataURL("image/png");
   };
