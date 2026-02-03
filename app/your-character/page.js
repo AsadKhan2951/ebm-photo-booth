@@ -30,10 +30,10 @@ const CHARACTER_POSES = {
       "/assets/Teddy/teddy-female-2.png",
       "/assets/Teddy/teddy-female-3.png",
       "/assets/Teddy/teddy-female-4.png",
-      "/assets/Teddy/teddy-female-6.png"
+      "/assets/Teddy/teddy-female-6.png",
+      "/assets/Teddy/teddy-female-7.png"
     ],
     male: [
-      "/assets/Teddy/teddy-male-7.png",
       "/assets/Teddy/teddy-male-8.png"
     ]
   },
