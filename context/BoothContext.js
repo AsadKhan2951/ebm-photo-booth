@@ -12,7 +12,8 @@ const emptyState = {
   shots: [], // dataURLs
   selectedIndex: null,
   enhanced: null, // dataURL (mock)
-  composite: null // final character image path/dataURL
+  composite: null, // final character image path/dataURL
+  poseLock: false // keep same pose across "try another photo" recaptures
 };
 
 export function BoothProvider({ children }) {
@@ -36,11 +37,18 @@ export function BoothProvider({ children }) {
   const api = useMemo(() => ({
     state,
     setUser: (user) => setState((s) => ({ ...s, user: { ...s.user, ...user } })),
-    setCharacter: (character) => setState((s) => ({ ...s, character })),
-    setShots: (shots) => setState((s) => ({ ...s, shots, selectedIndex: null, enhanced: null, composite: null })),
+    setCharacter: (character) => setState((s) => ({ ...s, character, composite: null, poseLock: false })),
+    setShots: (shots) => setState((s) => ({
+      ...s,
+      shots,
+      selectedIndex: null,
+      enhanced: null,
+      composite: s.poseLock ? s.composite : null
+    })),
     selectShot: (index) => setState((s) => ({ ...s, selectedIndex: index, enhanced: null })),
     setEnhanced: (enhanced) => setState((s) => ({ ...s, enhanced })),
     setComposite: (composite) => setState((s) => ({ ...s, composite })),
+    setPoseLock: (poseLock) => setState((s) => ({ ...s, poseLock })),
     resetAll: () => setState(emptyState)
   }), [state]);
 
