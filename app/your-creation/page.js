@@ -64,6 +64,7 @@ const PRINT_SHAPE_LAYOUT = {
   y: 0.075
 };
 const STORAGE_KEY = "kids_photo_booth_v1";
+const PRINT_FOOTER_FONT = "Cardust";
 
 function ordinalSuffix(day) {
   const mod10 = day % 10;
@@ -140,9 +141,15 @@ function getOpaqueBounds(img) {
 async function ensurePrintFonts() {
   if (typeof document === "undefined" || !document.fonts?.load) return;
   try {
+    const hasCardust = Array.from(document.fonts).some((f) => f.family === PRINT_FOOTER_FONT);
+    if (!hasCardust) {
+      const face = new FontFace(PRINT_FOOTER_FONT, "url(/Cardust.otf)");
+      await face.load();
+      document.fonts.add(face);
+    }
     await Promise.all([
-      document.fonts.load('900 64px "Baloo 2"'),
-      document.fonts.load('800 44px "Baloo 2"'),
+      document.fonts.load(`900 64px "${PRINT_FOOTER_FONT}"`),
+      document.fonts.load(`800 44px "${PRINT_FOOTER_FONT}"`),
       document.fonts.ready
     ]);
   } catch {}
@@ -325,7 +332,7 @@ export default function YourCreationScreen() {
 
     const displayName = String(state.user?.name || "").trim().toUpperCase() || "YOUNG PIPER";
     const dateText = formatPrintDate();
-    const titleFamily = "\"Baloo 2\", \"Arial Black\", sans-serif";
+    const titleFamily = `"${PRINT_FOOTER_FONT}", "Baloo 2", "Arial Black", sans-serif`;
 
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
