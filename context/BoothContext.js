@@ -7,7 +7,7 @@ const BoothContext = createContext(null);
 const STORAGE_KEY = "kids_photo_booth_v1";
 
 const emptyState = {
-  user: { name: "", age: "", gender: "", email: "", phone: "" },
+  user: { name: "", schoolName: "", age: "", gender: "", email: "", phone: "" },
   character: null, // {id,name}
   shots: [], // dataURLs
   selectedIndex: null,

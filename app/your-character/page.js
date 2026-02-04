@@ -8,7 +8,6 @@ const BG_URL = "/assets/Your%20Character/BG.png";
 const IMG = {
   header: "/assets/Your%20Character/Header.png",
   title: "/assets/Your%20Character/Your-Super-Character!.png",
-  tryAnother: "/assets/Your%20Character/Try-Another-New.png",
   perfect: "/assets/Your%20Character/This-is-Perfect-New.png"
 };
 
@@ -84,7 +83,7 @@ function pickRandomPose(poseList, storageKey) {
 
 export default function YourCharacterScreen() {
   const router = useRouter();
-  const { state, setComposite, setPoseLock } = useBooth();
+  const { state, setComposite } = useBooth();
   const characterId = state.character?.id;
   const gender = state.user?.gender === "male" ? "male" : "female";
   const [selectedPose, setSelectedPose] = useState("");
@@ -164,18 +163,7 @@ export default function YourCharacterScreen() {
           draggable="false"
         />
 
-        <div className="absolute left-1/2 bottom-[7%] w-[90%] -translate-x-1/2 flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={() => {
-              setPoseLock(true);
-              router.push("/capture");
-            }}
-            className="w-[47%] transition-transform active:scale-[0.98] hover:scale-[1.03]"
-            aria-label="Try another photo"
-          >
-            <img src={IMG.tryAnother} alt="Try another photo" className="w-full h-auto" draggable="false" />
-          </button>
+        <div className="absolute left-1/2 bottom-[7%] w-[90%] -translate-x-1/2 flex items-center justify-center">
           <button
             type="button"
             onClick={() => router.push("/your-creation")}

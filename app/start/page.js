@@ -15,6 +15,7 @@ export default function StartScreen() {
   const { state, setUser, resetAll } = useBooth();
   const [form, setForm] = useState({
     name: state.user?.name || "",
+    schoolName: state.user?.schoolName || "",
     age: state.user?.age || "",
     gender: state.user?.gender || "",
     email: state.user?.email || "",
@@ -107,6 +108,24 @@ export default function StartScreen() {
                   autoCapitalize="off"
                   spellCheck={false}
                   onChange={(e) => { setError(""); setForm((s) => ({ ...s, age: e.target.value })); }}
+                  onFocus={() => setError("")}
+                />
+              </label>
+
+              <label className="text-[#a424c7] font-bold tracking-wide text-[clamp(10px,1.5vw,14px)]">
+                SCHOOL NAME
+                <input
+                  className="mt-1 w-full rounded-[12px] border-[2.5px] border-white bg-[#ffe38c] px-4 text-[#a424c7] placeholder:text-[#2d2bb8]/70 outline-none"
+                  style={{ height: "clamp(26px, 4.3vw, 38px)" }}
+                  value={form.schoolName}
+                  placeholder="Enter your school name"
+                  autoComplete="new-password"
+                  name="school-name-field"
+                  id="school-name-field"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  onChange={(e) => { setError(""); setForm((s) => ({ ...s, schoolName: e.target.value })); }}
                   onFocus={() => setError("")}
                 />
               </label>
