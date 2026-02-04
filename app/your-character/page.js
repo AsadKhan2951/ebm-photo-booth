@@ -88,6 +88,7 @@ export default function YourCharacterScreen() {
   const gender = state.user?.gender === "male" ? "male" : "female";
   const [selectedPose, setSelectedPose] = useState("");
   const setCompositeRef = useRef(setComposite);
+  const compositeValueRef = useRef(state.composite);
 
   const poseList = useMemo(() => {
     const characterPoses = CHARACTER_POSES[characterId] || CHARACTER_POSES.migu;
@@ -103,6 +104,10 @@ export default function YourCharacterScreen() {
   }, [setComposite]);
 
   useEffect(() => {
+    compositeValueRef.current = state.composite;
+  }, [state.composite]);
+
+  useEffect(() => {
     if (!state.character) {
       router.replace("/character");
       return;
@@ -114,24 +119,24 @@ export default function YourCharacterScreen() {
 
   useEffect(() => {
     if (!state.shots?.length || !characterId) return;
-    let finalPose = "";
+
     const hasLockedPose = Boolean(
       state.poseLock &&
-      state.composite &&
-      poseList.includes(state.composite)
+      compositeValueRef.current &&
+      poseList.includes(compositeValueRef.current)
     );
-
-    if (hasLockedPose) {
-      finalPose = state.composite;
-    } else {
-      const storageKey = `kids_photo_booth_pose_${characterId}_${gender}`;
-      const picked = pickRandomPose(poseList, storageKey);
-      finalPose = picked || FALLBACK_POSE[characterId] || FALLBACK_POSE.migu;
-    }
+    const storageKey = `kids_photo_booth_pose_${characterId}_${gender}`;
+    const finalPose = hasLockedPose
+      ? compositeValueRef.current
+      : (pickRandomPose(poseList, storageKey) ||
+          FALLBACK_POSE[characterId] ||
+          FALLBACK_POSE.migu);
 
     setSelectedPose(finalPose);
-    setCompositeRef.current(finalPose);
-  }, [state.shots, state.poseLock, state.composite, characterId, gender, poseList]);
+    if (compositeValueRef.current !== finalPose) {
+      setCompositeRef.current(finalPose);
+    }
+  }, [state.shots, state.poseLock, characterId, gender, poseList]);
 
   return (
     <div className="min-h-screen w-full bg-[#0b2d64] flex items-center justify-center px-4 py-6 kids-font">
