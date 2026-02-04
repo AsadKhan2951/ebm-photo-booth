@@ -21,35 +21,41 @@ const IMG = {
 const LABELS = {
   migu: "/assets/Your%20Creation/MIGU.png",
   teddy: "/assets/Your%20Creation/TEDDY.png",
-  pipper: "/assets/Your%20Creation/PIPER.png"
+  pipper: "/assets/Your%20Creation/PIPER.png",
+  tasha: "/assets/Tasha/Tasha.png"
 };
 const CHARACTER_NAMES = {
   migu: "MIGU",
   teddy: "GLUCO TEDDY",
-  pipper: "PIED PIPER"
+  pipper: "PIED PIPER",
+  tasha: "TASHA"
 };
 const CARD_THEME = {
   migu: { bg: "linear-gradient(180deg, #1d72ff 0%, #0f53cc 100%)" },
   teddy: { bg: "linear-gradient(180deg, #f1943b 0%, #c86a1d 100%)" },
   pipper: { bg: "linear-gradient(180deg, #ffd25a 0%, #f1a52b 100%)" },
+  tasha: { bg: "linear-gradient(180deg, #ff58bf 0%, #d9349f 100%)" },
   default: { bg: "linear-gradient(180deg, #1d72ff 0%, #0f53cc 100%)" }
 };
 const UI_CARD_IMAGE = {
   migu: { top: 28, width: 84 },
   teddy: { top: 30, width: 76 },
   pipper: { top: 40, width: 56 },
+  tasha: { top: 32, width: 62 },
   default: { top: 28, width: 84 }
 };
 const PRINT_CHARACTER_LAYOUT = {
   migu: { top: 0.26, width: 0.86, height: 0.62, zoom: 1.1, yShift: 0.07, labelClearance: 1.02 },
   teddy: { top: 0.25, width: 0.8, height: 0.62, zoom: 1.08, yShift: 0.055, labelClearance: 0.86 },
   pipper: { top: 0.245, width: 0.78, height: 0.62, zoom: 1.02, yShift: 0.02, labelClearance: 0.8 },
+  tasha: { top: 0.25, width: 0.8, height: 0.62, zoom: 1.04, yShift: 0.05, labelClearance: 0.9 },
   default: { top: 0.26, width: 0.84, height: 0.62, zoom: 1.08, yShift: 0.07, labelClearance: 1.02 }
 };
 const PRINT_LABEL_LAYOUT = {
   migu: { width: 0.56, y: 0.18 },
   teddy: { width: 0.5, y: 0.17 },
   pipper: { width: 0.5, y: 0.17 },
+  tasha: { width: 0.5, y: 0.18 },
   default: { width: 0.52, y: 0.17 }
 };
 const PRINT_SHAPE_LAYOUT = {

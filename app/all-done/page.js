@@ -129,6 +129,7 @@ export default function AllDoneScreen() {
     migu: { top: 36, width: 85, left: 54 },
     teddy: { top: 36, width: 70, left: 50 },
     pipper: { top: 36, width: 45, left: 50 },
+    tasha: { top: 36, width: 56, left: 50 },
     default: { top: 36, width: 85, left: 54 }
   };
   const layout = characterLayout[characterId] || characterLayout.default;

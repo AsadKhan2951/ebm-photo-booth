@@ -13,7 +13,8 @@ const USE_BANUBA = process.env.NEXT_PUBLIC_USE_BANUBA === "true";
 const MIN_FACE_RATIO = 0.18;
 const MAX_FACE_TILT_DEG = 8;
 const CAMERA_PREF_KEY = "kids_photo_booth_camera";
-const PREFERRED_CAMERA_MATCH = [/logitech/i, /c920e/i, /c920/i, /insta360/i, /insta 360/i, /link/i, /virtual/i, /controller/i];
+const PREFERRED_CAMERA_MATCH = [/insta360/i, /insta 360/i, /link/i, /logitech/i, /c920e/i, /c920/i];
+const AVOID_CAMERA_MATCH = [/virtual/i, /obs/i, /snap camera/i, /manycam/i, /xsplit/i, /droidcam/i, /epoccam/i];
 let faceApiPromise = null;
 
 async function loadFaceApi() {
@@ -54,6 +55,11 @@ export default function CaptureScreen() {
   const [checkingDistance, setCheckingDistance] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState("");
   const [retryTick, setRetryTick] = useState(0);
+
+  const isAvoidedCamera = (device) => {
+    const label = String(device?.label || "");
+    return AVOID_CAMERA_MATCH.some((rx) => rx.test(label));
+  };
 
   useEffect(() => {
     if (!state.character) router.replace("/character");
@@ -175,9 +181,11 @@ export default function CaptureScreen() {
       const cams = list.filter((d) => d.kind === "videoinput");
       setSelectedDeviceId((prev) => {
         if (!cams.length) return "";
-        const hasLabels = cams.some((c) => c.label);
+        const normalCams = cams.filter((cam) => !isAvoidedCamera(cam));
+        const pickPool = normalCams.length ? normalCams : cams;
+        const hasLabels = pickPool.some((c) => c.label);
         if (hasLabels) {
-          const preferred = cams.find((c) => PREFERRED_CAMERA_MATCH.some((rx) => rx.test(c.label)));
+          const preferred = pickPool.find((c) => PREFERRED_CAMERA_MATCH.some((rx) => rx.test(c.label)));
           if (preferred) {
             if (typeof window !== "undefined") {
               localStorage.setItem(CAMERA_PREF_KEY, preferred.deviceId);
@@ -189,13 +197,13 @@ export default function CaptureScreen() {
         if (typeof window !== "undefined") {
           saved = localStorage.getItem(CAMERA_PREF_KEY) || "";
         }
-        if (saved && cams.some((c) => c.deviceId === saved)) {
+        if (saved && pickPool.some((c) => c.deviceId === saved)) {
           return saved;
         }
-        if (prev && cams.some((c) => c.deviceId === prev)) {
+        if (prev && pickPool.some((c) => c.deviceId === prev)) {
           return prev;
         }
-        const next = cams[0]?.deviceId || "";
+        const next = pickPool[0]?.deviceId || "";
         if (next && typeof window !== "undefined") {
           localStorage.setItem(CAMERA_PREF_KEY, next);
         }

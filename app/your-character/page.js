@@ -47,19 +47,33 @@ const CHARACTER_POSES = {
       "/assets/Pipper/pipper-male-1.png",
       "/assets/Pipper/pipper-male-2.png"
     ]
+  },
+  tasha: {
+    female: [
+      "/assets/Tasha/tasha-female-2.png",
+      "/assets/Tasha/tasha-female-5.png",
+      "/assets/Tasha/tasha-female-6.png"
+    ],
+    male: [
+      "/assets/Tasha/tasha-male-1.png",
+      "/assets/Tasha/tasha-male-3.png",
+      "/assets/Tasha/tasha-male-4.png"
+    ]
   }
 };
 
 const FALLBACK_POSE = {
   migu: "/assets/Migu/migu-female-1.png",
   teddy: "/assets/Teddy/teddy-female-1.png",
-  pipper: "/assets/Pipper/pipper-female-3.png"
+  pipper: "/assets/Pipper/pipper-female-3.png",
+  tasha: "/assets/Tasha/tasha-female-2.png"
 };
 
 const DISPLAY_LAYOUT = {
   migu: { top: 25, width: 74 },
   teddy: { top: 25, width: 62 },
   pipper: { top: 35, width: 44 },
+  tasha: { top: 30, width: 56 },
   default: { top: 35, width: 74 }
 };
 

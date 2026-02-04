@@ -63,6 +63,20 @@ const CHARACTERS = [
     leftArrow: "/assets/Pipper/Arrow.png",
     rightArrow: "/assets/Pipper/Arrow-2.png",
     layout: { charLeft: 12, charWidth: 80, charTop: 22, nameWidth: 50, shapeWidth: 45, selectWidth: 193 }
+  },
+  {
+    id: "tasha",
+    name: "TASHA",
+    bg: "/assets/Tasha/Tasha-BG.jpg.jpeg",
+    heading: "/assets/Tasha/Heading.png",
+    text: "/assets/Tasha/Text.png",
+    character: "/assets/Tasha/Tasha-Main-Character.png",
+    shape: "/assets/Tasha/shape.png",
+    nameImage: "/assets/Tasha/Tasha.png",
+    select: "/assets/Tasha/Button.png",
+    leftArrow: "/assets/Tasha/Arrow.png",
+    rightArrow: "/assets/Tasha/Arrow-2.png",
+    layout: { charLeft: 30, charWidth: 40, charTop: 30, nameTop: 20, nameWidth: 90, shapeWidth: 45, selectWidth: 193 }
   }
 ];
 
