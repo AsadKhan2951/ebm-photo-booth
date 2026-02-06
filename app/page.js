@@ -25,7 +25,7 @@ export default function MainScreen() {
           src={BG_URL}
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ objectPosition: "50% 64%" }}
+          style={{ objectPosition: "50% 60%" }}
           draggable="false"
         />
 
@@ -34,7 +34,7 @@ export default function MainScreen() {
             <img src={IMG.logo} alt="Little Pipers" className="w-full h-auto" draggable="false" />
           </div>
 
-          <div className="absolute left-1/2 bottom-[8%] -translate-x-1/2 w-[60%]">
+          <div className="absolute left-1/2 bottom-[4%] -translate-x-1/2 w-[58%]">
             <button
               type="button"
               onClick={onBegin}
