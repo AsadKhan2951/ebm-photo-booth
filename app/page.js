@@ -3,20 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useBooth } from "../context/BoothContext";
 
-const BG_URL = "/assets/Main%20Screen/BG.jpg";
+const BG_URL = "/assets/Main%20Screen/BG-new.jpg.jpeg";
 const IMG = {
-  logo: "/assets/Main%20Screen/Logo.png",
-  base: "/assets/Main%20Screen/Base-Circle.png",
   button: "/assets/Main%20Screen/Button.png",
-  migu: "/assets/Main%20Screen/MIGU.png",
-  liya: "/assets/Main%20Screen/LIYA.png",
-  teddy: "/assets/Main%20Screen/Teddy.png",
-  piper: "/assets/Main%20Screen/pied-piper-chibi.png",
-  arrowLeft: "/assets/Main%20Screen/Arrow.png",
-  arrowRight: "/assets/Main%20Screen/Arrow-2.png",
-  heart: "/assets/Main%20Screen/Heart.png",
-  stars: "/assets/Main%20Screen/Stars.png",
-  sun: "/assets/Main%20Screen/Sun.png"
+  logo: "/assets/Main%20Screen/Logo.png"
 };
 
 export default function MainScreen() {
@@ -31,84 +21,20 @@ export default function MainScreen() {
   return (
     <div className="min-h-screen w-full bg-[#2a0b4f] flex items-center justify-center px-4 py-6 kids-font">
       <div className="relative w-full max-w-[520px] aspect-[9/16] overflow-hidden rounded-[32px] shadow-2xl">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${BG_URL})` }}
+        <img
+          src={BG_URL}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ objectPosition: "50% 64%" }}
+          draggable="false"
         />
 
         <div className="absolute inset-0">
-          <div className="absolute left-1/2 top-[-3%] -translate-x-1/2 w-[65%]">
-            <img
-              src={IMG.logo}
-              alt="Little Pipers"
-              className="w-full h-auto"
-              draggable="false"
-            />
+          <div className="absolute left-1/2 top-[2%] -translate-x-1/2 w-[80%]">
+            <img src={IMG.logo} alt="Little Pipers" className="w-full h-auto" draggable="false" />
           </div>
 
-          <img
-            src={IMG.arrowLeft}
-            alt=""
-            className="absolute left-[-19%] top-[34%] w-[50%] ms-arrow-left"
-            draggable="false"
-          />
-          <img
-            src={IMG.arrowRight}
-            alt=""
-            className="absolute right-[0%] top-[19%] w-[50%] ms-arrow-right"
-            draggable="false"
-          />
-          <img
-            src={IMG.heart}
-            alt=""
-            className="absolute left-[10%] top-[24%] w-[12%] ms-float-slow"
-            draggable="false"
-          />
-          <img
-            src={IMG.sun}
-            alt=""
-            className="absolute right-[12%] top-[22%] w-[8%] ms-float"
-            draggable="false"
-          />
-          <img
-            src={IMG.stars}
-            alt=""
-            className="absolute right-[24%] top-[28%] w-[12%] ms-float-slow ms-delay-2 z-10"
-            draggable="false"
-          />
-
-          <img
-            src={IMG.base}
-            alt=""
-            className="absolute left-1/2 bottom-[23%] -translate-x-1/2 w-[90%]"
-            draggable="false"
-          />
-          <img
-            src={IMG.piper}
-            alt=""
-            className="absolute left-1/2 bottom-[28%] -translate-x-1/2 w-[58%]"
-            draggable="false"
-          />
-          <img
-            src={IMG.liya}
-            alt=""
-            className="absolute left-[1%] bottom-[24%] w-[48%]"
-            draggable="false"
-          />
-          <img
-            src={IMG.migu}
-            alt=""
-            className="absolute left-1/2 bottom-[22%] -translate-x-1/2 w-[45%]"
-            draggable="false"
-          />
-          <img
-            src={IMG.teddy}
-            alt=""
-            className="absolute right-[-18%] bottom-[24%] w-[80%]"
-            draggable="false"
-          />
-
-          <div className="absolute left-1/2 bottom-[6%] -translate-x-1/2 w-[62%]">
+          <div className="absolute left-1/2 bottom-[8%] -translate-x-1/2 w-[60%]">
             <button
               type="button"
               onClick={onBegin}
