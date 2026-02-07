@@ -152,6 +152,14 @@ export default function YourCharacterScreen() {
     }
   }, [state.shots, state.poseLock, characterId, gender, poseList]);
 
+  const onPerfect = () => {
+    const resolvedPose = selectedPose || FALLBACK_POSE[characterId] || FALLBACK_POSE.migu;
+    if (resolvedPose) {
+      setComposite(resolvedPose);
+    }
+    router.push("/your-creation");
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#0b2d64] flex items-center justify-center px-4 py-6 kids-font">
       <div className="relative w-full max-w-[520px] aspect-[9/16] overflow-hidden rounded-[32px] shadow-2xl">
@@ -185,7 +193,7 @@ export default function YourCharacterScreen() {
         <div className="absolute left-1/2 bottom-[7%] w-[90%] -translate-x-1/2 flex items-center justify-center">
           <button
             type="button"
-            onClick={() => router.push("/your-creation")}
+            onClick={onPerfect}
             className="w-[43%] transition-transform active:scale-[0.98] hover:scale-[1.03]"
             aria-label="This is perfect"
           >
